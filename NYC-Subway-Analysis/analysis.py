@@ -49,49 +49,59 @@ data = data.dropna()
 
 # Run the Mann Whitney U-test on sample of entries data for rain and no rain observations
 def test_rain(data):
-    # Sample 4,999 rows from dataset (to avoid 'overpowering')
-    rows = random.sample(data.index, 4999)
-    data_4999 = data.ix[rows]
-    # Create rain / norain sub-datasets
-    rain = data_4999[data_4999['rain'] == 1]
-    norain = data_4999[data_4999['rain'] == 0]
-    # Test for normality (or lack thereof)
-    scipy.stats.shapiro(rain['ENTRIESn_hourly']) 
-    scipy.stats.shapiro(norain['ENTRIESn_hourly'])
-    # Find medians for each set
-    with_rain_median = np.median(rain['ENTRIESn_hourly'])
-    without_rain_median = np.median(norain['ENTRIESn_hourly'])
-    # Run Mann Whitney U-test to determine similarity / difference in distributions
-    # Run Mann Whitney U-test on 1000 different samples and find average p-value
-    p_roll = 0
-    for i in range(1000):
-        val, pval = scipy.stats.mannwhitneyu(rain['ENTRIESn_hourly'], norain['ENTRIESn_hourly'])
-        p_roll = p_roll + pval
-    
-    return p_roll / 1000
+	rain_med = 0
+	norain_med = 0
+	val = 0
+	p_roll = 0
+	# Perform mwut on 10 samples of subway data
+	for i in range(100):
+		# Sample 4,999 rows from dataset (to avoid 'overpowering')
+		rows = random.sample(data.index, 4999)
+		data_4999 = data.ix[rows]
+		# Create rain / norain sub-datasets
+		rain = data_4999[data_4999['rain'] == 1]
+		norain = data_4999[data_4999['rain'] == 0]
+		# Test for normality (or lack thereof)
+		scipy.stats.shapiro(rain['ENTRIESn_hourly']) 
+		scipy.stats.shapiro(norain['ENTRIESn_hourly'])
+		# Find medians for each set
+		with_rain_median = np.median(rain['ENTRIESn_hourly'])
+		rain_med = rain_med + with_rain_median
+		without_rain_median = np.median(norain['ENTRIESn_hourly'])
+		norain_med = norain_med + without_rain_median
+		# Run Mann Whitney U-test to determine similarity / difference in distributions
+		mw_val, pval = scipy.stats.mannwhitneyu(rain['ENTRIESn_hourly'], norain['ENTRIESn_hourly'])
+		val = val + mw_val
+		p_roll = p_roll + pval
+	return rain_med / 100, norain_med / 100, val / 100, p_roll / 100
 
 # Run the Mann Whitney U-test on sample of entries data for weekend and weekday observations
 def test_weekend(data):
-    # Sample 4,999 rows from dataset (to avoid 'overpowering')
-    rows = random.sample(data.index, 4999)
-    data_4999 = data.ix[rows]
-    # Create rain / norain sub-datasets
-    onWeekend = data_4999[data_4999['isWeekend'] == 1]
-    notWeekend = data_4999[data_4999['isWeekend'] == 0]
-    # Test for normality (or lack thereof)
-    scipy.stats.shapiro(onWeekend['ENTRIESn_hourly']) 
-    scipy.stats.shapiro(notWeekend['ENTRIESn_hourly'])
-    # Find medians for each set
-    weekend_median = np.median(onWeekend['ENTRIESn_hourly'])
-    weekday_median = np.median(notWeekend['ENTRIESn_hourly'])
-    # Run Mann Whitney U-test to determine similarity / difference in distributions
-    # Run Mann Whitney U-test on 100 different samples and find average p-value
-    p_roll = 0
-    for i in range(1000):
-        val, pval = scipy.stats.mannwhitneyu(onWeekend['ENTRIESn_hourly'], notWeekend['ENTRIESn_hourly'])
-        p_roll = p_roll + pval
-    
-    return p_roll / 1000
+	weekend_med = 0
+	weekday_med = 0
+	val = 0
+	p_roll = 0
+	# Perform mwut on 10 samples of subway data
+	for i in range(100):
+		# Sample 4,999 rows from dataset (to avoid 'overpowering')
+		rows = random.sample(data.index, 4999)
+		data_4999 = data.ix[rows]
+		# Create rain / norain sub-datasets
+		weekend = data_4999[data_4999['isWeekend'] == 1]
+		weekday = data_4999[data_4999['isWeekend'] == 0]
+		# Test for normality (or lack thereof)
+		scipy.stats.shapiro(weekend['ENTRIESn_hourly']) 
+		scipy.stats.shapiro(weekday['ENTRIESn_hourly'])
+		# Find medians for each set
+		weekend_median = np.median(weekend['ENTRIESn_hourly'])
+		weekend_med = weekend_med + weekend_median
+		weekday_median = np.median(weekday['ENTRIESn_hourly'])
+		weekday_med = weekday_med + weekday_median
+		# Run Mann Whitney U-test to determine similarity / difference in distributions
+		mw_val, pval = scipy.stats.mannwhitneyu(weekend['ENTRIESn_hourly'], weekday['ENTRIESn_hourly'])
+		val = val + mw_val
+		p_roll = p_roll + pval
+	return weekend_med / 100, weekday_med / 100, val / 100, p_roll / 100
 
 # Predictions with Linear Regression
 
