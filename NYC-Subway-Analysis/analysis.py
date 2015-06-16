@@ -62,7 +62,7 @@ def test_rain(data):
     with_rain_median = np.median(rain['ENTRIESn_hourly'])
     without_rain_median = np.median(norain['ENTRIESn_hourly'])
     # Run Mann Whitney U-test to determine similarity / difference in distributions
-    # Run Mann Whitney U-test on 100 different samples and find average p-value
+    # Run Mann Whitney U-test on 1000 different samples and find average p-value
     p_roll = 0
     for i in range(1000):
         val, pval = scipy.stats.mannwhitneyu(rain['ENTRIESn_hourly'], norain['ENTRIESn_hourly'])
@@ -147,15 +147,44 @@ def calc_r_squared(dataframe):
 # Visualizations
 
 # Create an entries histogram split by rain and no rain
-plt.figure()
-df['ENTRIESn_hourly'][df['rain'] == 0].hist(bins=30)
-df['ENTRIESn_hourly'][df['rain'] == 1].hist(bins=30)
-plt.show()
+ggplot(aes(x='ENTRIESn_hourly', color='rain'), data=data) +\
+    geom_histogram() +\
+    ggtitle('Histogram of Hourly Subway Entries') +\
+    labs('Entries', 'Freq')
 
-# Total entries by day
-df['ENTRIESn_hourly'].groupby(df.DATEn).sum().plot()
-plt.show()
+# This is one... Daily Entries Line Chart
 
-# Total entries by location
-data['ENTRIESn_hourly'].groupby(data.DayOfWeek).median().plot()
-plt.show()
+byDate = data['ENTRIESn_hourly'].groupby(data.DATEn).sum()
+byDate.index.name = 'thedate'
+byDate = byDate.reset_index()
+byDate['thedate'] = map(lambda x: datetime.datetime.strptime(x, '%Y-%m-%d'), byDate['thedate'])
+longdf = pd.melt(byDate, id_vars=['thedate'])
+ggplot(aes(x='thedate', y='value', colour='variable'), data=longdf) +\
+    geom_line() +\
+    scale_x_date(breaks=date_breaks('2 day'), labels='%b %d %Y') +\
+    scale_y_continuous(labels='comma') +\
+    xlab('Date') +\
+    ylab('Daily Entries') +\
+    ggtitle('NYC Daily Subway Entries: May 2011')
+
+# This is one... Week Ago Scatterplot
+
+# First need to get # of entries from one week prior
+helper = []
+for el in data['UNIT'].unique():
+    helper.append(data[data['UNIT'] == el])
+for el in helper:
+    el['week_ago'] = el['ENTRIESn_hourly'].shift(42)
+data = helper[0]
+count = 1
+for df in helper[1:]:
+    data = pd.DataFrame.append(data, df)
+data = data.dropna()
+
+# Now we can create scatter plot between entries today and entries one week prior colored by whether the day is a weekend or not
+byDate = data[['ENTRIESn_hourly', 'week_ago', 'isWeekend']].groupby(data.DATEn).sum().dropna().reset_index(drop=True)
+ggplot(aes(x=byDate['ENTRIESn_hourly'], y=byDate['week_ago'], color='isWeekend', labels='day'), data=byDate) +\
+    geom_point() +\
+    xlab('Daily Entries') +\
+    ylab('Week Prior Entries') +\
+    ggtitle('Entries versus Week Prior')
