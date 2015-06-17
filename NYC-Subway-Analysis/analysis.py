@@ -48,6 +48,7 @@ data = data.dropna()
 # Statistical Testing
 
 # Run the Mann Whitney U-test on sample of entries data for rain and no rain observations
+random.seed(1234)
 def test_rain(data):
 	rain_med = 0
 	norain_med = 0
@@ -76,6 +77,7 @@ def test_rain(data):
 	return rain_med / 100, norain_med / 100, val / 100, p_roll / 100
 
 # Run the Mann Whitney U-test on sample of entries data for weekend and weekday observations
+random.seed(1234)
 def test_weekend(data):
 	weekend_med = 0
 	weekday_med = 0
@@ -167,7 +169,6 @@ ggplot(aes(x='ENTRIESn_hourly', color='rain'), data=data) +\
 byDate = data['ENTRIESn_hourly'].groupby(data.DATEn).sum()
 byDate.index.name = 'thedate'
 byDate = byDate.reset_index()
-byDate['thedate'] = map(lambda x: datetime.datetime.strptime(x, '%Y-%m-%d'), byDate['thedate'])
 longdf = pd.melt(byDate, id_vars=['thedate'])
 ggplot(aes(x='thedate', y='value', colour='variable'), data=longdf) +\
     geom_line() +\
@@ -193,8 +194,9 @@ data = data.dropna()
 
 # Now we can create scatter plot between entries today and entries one week prior colored by whether the day is a weekend or not
 byDate = data[['ENTRIESn_hourly', 'week_ago', 'isWeekend']].groupby(data.DATEn).sum().dropna().reset_index(drop=True)
-ggplot(aes(x=byDate['ENTRIESn_hourly'], y=byDate['week_ago'], color='isWeekend', labels='day'), data=byDate) +\
-    geom_point() +\
+byDate['isWeekend'] = byDate['isWeekend'] > 0
+ggplot(aes(x=byDate['ENTRIESn_hourly'], y=byDate['week_ago'], color='isWeekend'), data=byDate) +\
+    geom_point(size=150) +\
     xlab('Daily Entries') +\
     ylab('Week Prior Entries') +\
     ggtitle('Entries versus Week Prior')
