@@ -1,9 +1,7 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import datetime
 import scipy
-import scipy.stats
 import statsmodels.api as sm
 from ggplot import *
 import random
@@ -164,8 +162,7 @@ ggplot(aes(x='ENTRIESn_hourly', color='rain'), data=data) +\
     ggtitle('Histogram of Hourly Subway Entries') +\
     labs('Entries', 'Freq')
 
-# This is one... Daily Entries Line Chart
-
+# Daily Entries Line Chart
 byDate = data['ENTRIESn_hourly'].groupby(data.DATEn).sum()
 byDate.index.name = 'thedate'
 byDate = byDate.reset_index()
@@ -178,7 +175,8 @@ ggplot(aes(x='thedate', y='value', colour='variable'), data=longdf) +\
     ylab('Daily Entries') +\
     ggtitle('NYC Daily Subway Entries: May 2011')
 
-# This is one... Week Ago Scatterplot
+# Week Ago Scatterplot
+# Remember to re-read original data since we removed week one for the week over week difference
 
 # First need to get # of entries from one week prior
 helper = []
