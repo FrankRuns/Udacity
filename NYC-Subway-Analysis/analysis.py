@@ -4,13 +4,14 @@ import datetime
 import scipy
 import statsmodels.api as sm
 from ggplot import *
-import random
 
 # Load improved data set
 df = pd.read_csv('improved-data.csv')
 
 # Remove outliers defined as hourly entries 3 standard deviations away from the mean
 data = df[np.abs(df.ENTRIESn_hourly-df.ENTRIESn_hourly.mean())<=(3*df.ENTRIESn_hourly.std())]
+
+data = df.copy()
 
 # Convert date to datetime object and create is_weekend variable where weekend is Fri, Sat, Sun
 data['DATEn'] = map(lambda x: datetime.datetime.strptime(x, '%m-%d-%y'), data['DATEn'])
@@ -46,62 +47,32 @@ data = data.dropna()
 # Statistical Testing
 
 # Run the Mann Whitney U-test on sample of entries data for rain and no rain observations
-random.seed(1234)
+# Alpha = 0.025
 def test_rain(data):
-	rain_med = 0
-	norain_med = 0
-	val = 0
-	p_roll = 0
-	# Perform mwut on 10 samples of subway data
-	for i in range(100):
-		# Sample 4,999 rows from dataset (to avoid 'overpowering')
-		rows = random.sample(data.index, 4999)
-		data_4999 = data.ix[rows]
-		# Create rain / norain sub-datasets
-		rain = data_4999[data_4999['rain'] == 1]
-		norain = data_4999[data_4999['rain'] == 0]
-		# Test for normality (or lack thereof)
-		scipy.stats.shapiro(rain['ENTRIESn_hourly']) 
-		scipy.stats.shapiro(norain['ENTRIESn_hourly'])
-		# Find medians for each set
-		with_rain_median = np.median(rain['ENTRIESn_hourly'])
-		rain_med = rain_med + with_rain_median
-		without_rain_median = np.median(norain['ENTRIESn_hourly'])
-		norain_med = norain_med + without_rain_median
-		# Run Mann Whitney U-test to determine similarity / difference in distributions
-		mw_val, pval = scipy.stats.mannwhitneyu(rain['ENTRIESn_hourly'], norain['ENTRIESn_hourly'])
-		val = val + mw_val
-		p_roll = p_roll + pval
-	return rain_med / 100, norain_med / 100, val / 100, p_roll / 100
+    # Create rain / norain sub-datasets
+    rain = data[data['rain'] == 1]
+    norain = data[data['rain'] == 0]
+    # Find medians for each set
+    with_rain_median = np.median(rain['ENTRIESn_hourly'])
+    without_rain_median = np.median(norain['ENTRIESn_hourly'])
+    # Run Mann Whitney U-test to determine similarity / difference in distributions
+    U, p = scipy.stats.mannwhitneyu(rain['ENTRIESn_hourly'], norain['ENTRIESn_hourly'])
+
+    return 'rain_num:' + str(len(rain)), 'rain med:' + str(with_rain_median), 'nonrain num:' + str(len(norain)), 'nonrain med: ' + str(without_rain_median), 'test-stat: ' + str(U), 'p-val: ' + str(p)
 
 # Run the Mann Whitney U-test on sample of entries data for weekend and weekday observations
-random.seed(1234)
+# Alpha = 0.025
 def test_weekend(data):
-	weekend_med = 0
-	weekday_med = 0
-	val = 0
-	p_roll = 0
-	# Perform mwut on 10 samples of subway data
-	for i in range(100):
-		# Sample 4,999 rows from dataset (to avoid 'overpowering')
-		rows = random.sample(data.index, 4999)
-		data_4999 = data.ix[rows]
-		# Create rain / norain sub-datasets
-		weekend = data_4999[data_4999['isWeekend'] == 1]
-		weekday = data_4999[data_4999['isWeekend'] == 0]
-		# Test for normality (or lack thereof)
-		scipy.stats.shapiro(weekend['ENTRIESn_hourly']) 
-		scipy.stats.shapiro(weekday['ENTRIESn_hourly'])
-		# Find medians for each set
-		weekend_median = np.median(weekend['ENTRIESn_hourly'])
-		weekend_med = weekend_med + weekend_median
-		weekday_median = np.median(weekday['ENTRIESn_hourly'])
-		weekday_med = weekday_med + weekday_median
-		# Run Mann Whitney U-test to determine similarity / difference in distributions
-		mw_val, pval = scipy.stats.mannwhitneyu(weekend['ENTRIESn_hourly'], weekday['ENTRIESn_hourly'])
-		val = val + mw_val
-		p_roll = p_roll + pval
-	return weekend_med / 100, weekday_med / 100, val / 100, p_roll / 100
+    # Create weekend / weekday sub-datasets
+    weekend = data[data['isWeekend'] == 1]
+    weekday = data[data['isWeekend'] == 0]
+    # Find medians for each set
+    weekend_med = np.median(weekend['ENTRIESn_hourly'])
+    weekday_med = np.median(weekday['ENTRIESn_hourly'])
+    # Run Mann Whitney U-test to determine similarity / difference in distributions
+    U, p = scipy.stats.mannwhitneyu(weekend['ENTRIESn_hourly'], weekday['ENTRIESn_hourly'])
+
+    return 'weekend_num:' + str(len(weekend)), 'weekend med:' + str(weekend_med), 'weekday_num' + str(len(weekday)), 'weekday med: ' + str(weekday_med), 'test-stat: ' + str(U), 'p-val: ' + str(p)
 
 # Predictions with Linear Regression
 
@@ -157,7 +128,7 @@ def calc_r_squared(dataframe):
 # Visualizations
 
 # Create an entries histogram split by rain and no rain
-ggplot(aes(x='ENTRIESn_hourly', color='rain'), data=data) +\
+ggplot(aes(x='ENTRIESn_hourly', fill='rain'), data=data) +\
     geom_histogram() +\
     ggtitle('Histogram of Hourly Subway Entries') +\
     labs('Entries', 'Freq')
@@ -167,7 +138,7 @@ byDate = data['ENTRIESn_hourly'].groupby(data.DATEn).sum()
 byDate.index.name = 'thedate'
 byDate = byDate.reset_index()
 longdf = pd.melt(byDate, id_vars=['thedate'])
-ggplot(aes(x='thedate', y='value', colour='variable'), data=longdf) +\
+ggplot(aes(x='thedate', y='value', fill='variable'), data=longdf) +\
     geom_line() +\
     scale_x_date(breaks=date_breaks('2 day'), labels='%b %d %Y') +\
     scale_y_continuous(labels='comma') +\
