@@ -5,15 +5,13 @@ import scipy
 import statsmodels.api as sm
 from ggplot import *
 
+# Data Reading and Cleaning
+
 # Load improved data set
 df = pd.read_csv('improved-data.csv')
 
-# Remove outliers defined as hourly entries 3 standard deviations away from the mean
-data = df[np.abs(df.ENTRIESn_hourly-df.ENTRIESn_hourly.mean())<=(3*df.ENTRIESn_hourly.std())]
-
-data = df.copy()
-
 # Convert date to datetime object and create is_weekend variable where weekend is Fri, Sat, Sun
+data = df.copy()
 data['DATEn'] = map(lambda x: datetime.datetime.strptime(x, '%m-%d-%y'), data['DATEn'])
 data['DayOfWeek'] = map(lambda x: x.weekday(), data['DATEn'])
 data['isWeekend'] = (data['DayOfWeek'] == 0) | (data['DayOfWeek'] == 6) | (data['DayOfWeek'] == 5)
@@ -27,8 +25,8 @@ for el in helper:
     el['offset_entries_week'] = el['ENTRIESn_hourly'].diff(42)
 data = helper[0]
 count = 1
-for df in helper[1:]:
-    data = pd.DataFrame.append(data, df)
+for dframe in helper[1:]:
+    data = pd.DataFrame.append(data, dframe)
 
 # Create 'day before' variable
 helper = []
@@ -38,8 +36,8 @@ for el in helper:
     el['offset_entries_day'] = el['ENTRIESn_hourly'].diff(7)
 data = helper[0]
 count = 1
-for df in helper[1:]:
-    data = pd.DataFrame.append(data, df)
+for dframe in helper[1:]:
+    data = pd.DataFrame.append(data, dframe)
 
 # Drop rows where prior entries is Nan
 data = data.dropna()
