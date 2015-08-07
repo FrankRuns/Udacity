@@ -1,0 +1,24 @@
+List of resources used for Data Wrangling with MongoDB's course project Wrangling OpenStreetMap Data
+
+# The ElementTree XML API Python Documentation
+# https://docs.python.org/2/library/xml.etree.elementtree.html
+# http://effbot.org/zone/element-iterparse.html
+
+# Regular Expression Operations Python Documentation
+# https://docs.python.org/2/library/re.html
+
+# Udacity: Data Wrangling with MongoDB Course
+# https://www.udacity.com/course/data-wrangling-with-mongodb--ud032-nd
+
+# OpenStreetMap Wiki
+# https://wiki.openstreetmap.org/wiki/Main_Page
+# https://www.openstreetmap.org/about
+
+# Boulder County Zip Codes
+# http://www.zillow.com/browse/homes/co/boulder-county/
+
+# Boulder County Cities
+# https://en.wikipedia.org/wiki/Boulder_County,_Colorado
+
+# Boulder County Mountain Peaks
+# http://www.climb.mountains.com/Project_Island_files/CO_County_Boulder.shtml
