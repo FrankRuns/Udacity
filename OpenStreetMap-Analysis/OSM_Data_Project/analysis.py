@@ -84,7 +84,8 @@ result = db.osmb_807.aggregate( [ { "$match" : { "highway" : "footway" } },
 result = db.osmb_807.aggregate( [ { "$match" : { "natural" : "peak" } },
                                   { "$project" : { "_id" : 0,
                                                    "Peak" : "$name",
-                                                   "Elevation" : "$ele"} },
+                                                   "Elevation" : "$ele",
+                                                   "User" : "$created.user"} },
                                   { "$sort" : { "Elevation" : -1 } } ] )
 
 # Using mongo shell, how many peaks are there in the dataset?
