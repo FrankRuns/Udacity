@@ -27,6 +27,15 @@ attach(pf)
 wilcox.test(friend_count ~ gender, data = subset(pf, !is.na(gender)))
 detach(pf)
 
+library(dplyr)
+chicks <- filter(pf, gender == 'female') %>% select(friend_count)
+dudes <- filter(pf, gender == 'male') %>% select(friend_count)
+
+set.seed(1234)
+chick_sample <- replicate(5000, mean(sample(chicks$friend_count, 100)))
+dude_sample <- replicate(5000, mean(sample(dudes$friend_count, 100)))
+t.test(chick_sample, dude_sample)
+
 ##############################################################################
 # Tenure is how many days someones been using facebook
 qplot(x=tenure, data=pf, binwidth=30,
