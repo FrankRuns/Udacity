@@ -113,6 +113,10 @@ anti_join(songs, artists, by = "name")
 # Join is all about combining data frames
 
 # Gapminder Data Analysis
+# Gapminder Data Analysis
+# Gapminder Data Analysis
+# Gapminder Data Analysis
+# Gapminder Data Analysis
 library(XLConnect)
 wb = loadWorkbook("laborparticipation.xlsx")
 data = readWorksheet(wb, "data", header=T)
