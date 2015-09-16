@@ -1,0 +1,119 @@
+2012 Florida Campaign Donation Analysis
+========================================================
+
+# Introduction
+
+This is an exploration of 2012 US presidential campaign donations in the state of Florida. Over the past few decades, Florida has been the most populated of the "swing states" -- states where both political parties (republican/democrat) have a similar level of support. The dataset comes from the [Federal Election Committee](http://www.fec.gov/disclosurep/PDownload.do). [In 1975, the US Congress created the Federal Election Commission (FEC) to administer and enforce the Federal Election Campaign Act (FECA) - the statute that governs the financing of federal elections... and oversees the public funding of Presidential elections.](http://www.fec.gov/about.shtml). Noting a strong correlation between [campaign spending and election results](http://www.thewire.com/politics/2013/11/does-more-campaign-money-actually-buy-more-votes-investigation/71473/) and having perfect hindsight of knowing how the 2012 Presidential election results, analyzing this dataset can put the answers to a lot of questions (below) into context.
+
+In Florida, which candidates received the most dollars and from how many people? Where do these contributors reside? What do they do? When do they donate? Are there distinct characteristics in the data between Republican contributors, Democratic contributors.. and other party contributors? If so, given these characteristics, can we predict which political party an individual/entity will contribute to? Is the total campaign donation as important as count of contributors and/or amount per contributor? Do more people contribute on weekdays or weekends ([this gets hairy since donation day not necessarily equal to donation processed day](http://www.mattblackwell.org/files/papers/gamechangers.pdf))? Is contribution size (large vs. small) on a given day important? If so, can we predict contribution amount on a particular day of the campaign?
+
+Lots of questions, lets look for some answers...
+
+```{r}
+# Setting up the data and loading our 'crucial' tools
+setwd("/Users/frankCorrigan/Downloads")
+
+# Libraries used for... everything
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+
+# Row names read in a bit fucked up, so little adjustment needed
+data <- read.csv("FEC_FL2012_Data.csv", row.names = NULL)
+correct_names <- names(data)[2:length(names(data))]
+data <- select(data, -election_tp)
+names(data) <- correct_names
+```
+
+# Univariate Analysis
+
+```{r}
+str(data)
+```
+
+Initial observations. 361K donations, 19 features -- mostly categorical, one numeric, one date (that's still factor and we'll convert to date object almost immediately). There is no party affiliation perse -- will need to add that. There is a lot of inconsistency in contributor city name and zip which will have to be cleaned to do any mapping. For instance, ST. AU7GUSTINE, ST. AUGUSTINE, ST. AUGUTINE, ST, AUGUSTINE. There will be a lot of missing/invalid values in contrb employer and occupation.
+
+```{r}
+data$date <- as.Date(data$contb_receipt_dt, format = "%d-%b-%y")
+nom_date <- as.Date("28-AUG-12", format = "%d-%b-%y")
+elec_date <- as.Date("06-NOV-12", format = "%d-%b-%y")
+data$days_from_elec <- as.integer(elec_date - data$date)
+summary(data$date)
+summary(data$days_from_elec)
+```
+
+Immediately, we make the date usable and see that campaign contributions start 664 days! before the election even takes place and are processed up to 45 days after.
+
+```{r}
+table(data$cand_nm) # 14 unique -- Stein = 45 & McCotter = 1 -- remove these
+data <- subset(data, cand_nm != "Stein, Jill" & cand_nm != "McCotter, Thaddeus G") # Removes 46 observations
+ggplot(aes(x=cand_nm), data=data) +
+      geom_bar() +
+      ggtitle("Count of Contributions by Candidate") +
+      coord_flip() # Barak most contributions by far, followed by romney, followed by Ron Paul
+ggplot(aes(x=cand_nm), data=subset(data, date < nom_date)) + # Even playing field using only days before Romney nominated Repub candidate
+      geom_bar() +
+      ggtitle("Count of Contributions Pre-Nomination Date by Candidate") +
+      coord_flip() # Not a huge difference. Romney and Barack still way out front
+```
+
+There were 14 candidates in the race, but at least 2 with minimal donations in FL can be removed -- Jill Stein and Thaddeus McCotter. First, we see how many contributions each candidate got during the total election cycle, and then filter it down to look at only days before Mitt Romney was nominated the Republican candidate which was August 28, 2012. Barak Obama wide leader in both instances. Maybe this is only because he is the incumbent and only Democratic candidate. What changes if we look at number of contributions per day in the race?
+
+```{r}
+contrib_per_day_in_race <- data %>%
+                           group_by(cand_nm) %>%
+                           summarize(min = min(date), max = max(date), n=n()) %>%
+                           mutate(days = max-min, contrib_per_day = n/as.numeric(days)) # Herman Cain in race for 670 days (most).. Michele Bachmann in race for 219 days (least)
+ggplot(aes(x=cand_nm, y=contrib_per_day), data=contrib_per_day_in_race) +
+      geom_bar(stat="identity") +
+      coord_flip()
+```
+
+Not much at all. Mr. Obama still wide leader. So, let's group the by politcal party to better understand the contribution distribution.
+
+```{r}
+data$party <- ifelse(data$cand_nm == "Obama, Barack", c("democrat"), c("republican")) 
+data$party[data$cand_nm == "Johnson, Gary Earl"] <- "libertarian"
+data$party[data$cand_nm == "Roemer, Charles E. 'Buddy' III" | data$cand_nm == "Stein, Jill"] <- "other"
+table(data$party)
+```
+
+Wow. Democrats has almost 1.5x as many donations as Republicans in FL in 2012. As background, Florida's electoral votes went Democrat in 2008 as well as 1996... but went Republican in 2000 and 2004. Moving on to contributor data.
+
+For starters, how many contributions did the average individual/entity make and how many unique locations were contributors in?
+
+```{r}
+mean(table(data$contbr_nm)) # Average # of contributions is 4.4 assuming each name is unique. Wish there was a contributor id... quick search says multiple contributions from single contributor
+length(table(data$contbr_city)) # Lots of variety in single city names... not sure it's worth fixing
+length(table(data$contbr_zip))
+```
+
+This shows us average number of contributions was 4 (assuming different people aren't using the same name), there was 1,400 unique city names, and 51,000 unique zip codes. Let's dive in and clean up those zip codes using the [zipcode](https://cran.r-project.org/web/packages/zipcode/zipcode.pdf) package.
+
+```{r}
+library(zipcode) # https://cran.r-project.org/web/packages/zipcode/
+data$zip = clean.zipcodes(data$contbr_zip) # Leaves us with many 9-digit zips. Shorten to 5-digit zips.
+data$zip = substr(data$zip, 1, 5)
+length(table(data$zip))
+```
+
+The clean zipcodes function still leaves us with many 9-digit zipcodes. For those we use the first 5 digits. This gives us a more manageable 1,468 zip codes. But we are not done, some of these zip codes are not even in Florida. So we remove those too and at the same time add latitude and longitude coordinates to our data based on these remaining zip codes.
+
+```{r}
+data <- subset(data, zip >= 30000 & zip < 40000) # We lose 423 observations
+# Now, are all of our zip codes in FL?
+data(zipcode)
+data <- left_join(data, zipcode, by="zip")
+# TODO -- check contb_city with zipcode city
+data <- filter(data, state == "FL")
+```
+
+Regarding contributor's occupations. What is the mode of contributor occupation? How many unique occupations are in this dataset?
+
+```{r}
+tail(sort(table(data$contbr_employer)),1) 
+length(sort(table(data$contbr_occupation)))
+```
+
+I won't worry about the inconsistency in occupation for now (RETIRED, RETIRED TEACHER, HAPPILY RETIRED, ETC.), but just note that it exists. 
+
