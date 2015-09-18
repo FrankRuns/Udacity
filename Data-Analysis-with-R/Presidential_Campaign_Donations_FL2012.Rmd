@@ -1,9 +1,11 @@
 
-"2012 Florida Campaign Donation Analysis"
+# 2012 Florida US Presidential Campaign Donation Analysis 
+
+by Frank Corrigan
 
 ========================================================
 
-# Introduction
+## Introduction
 
 This is an exploration of 2012 US presidential campaign donations in the state of Florida. Over the past few decades, Florida has been the most populated of the "swing states" -- states where both political parties (republican/democrat) have a similar level of support. The dataset comes from the [Federal Election Committee](http://www.fec.gov/disclosurep/PDownload.do). [In 1975, the US Congress created the Federal Election Commission (FEC) to administer and enforce the Federal Election Campaign Act (FECA) - the statute that governs the financing of federal elections... and oversees the public funding of Presidential elections.](http://www.fec.gov/about.shtml). Noting a strong correlation between [campaign spending and election results](http://www.thewire.com/politics/2013/11/does-more-campaign-money-actually-buy-more-votes-investigation/71473/) and having perfect hindsight of knowing how the 2012 Presidential election results, analyzing this dataset can put the answers to a lot of questions (below) into context.
 
@@ -11,9 +13,12 @@ In Florida, which candidates received the most dollars and from how many people?
 
 Lots of questions, lets look for some answers...
 
-```{r}
+Begin with loading the dataset and the crucial packages -- dplyr, ggplot2, ggthemes, and gridExtra.
+
+```{r echo=FALSE, results="hide", message=FALSE}
 # Setting up the data and loading our 'crucial' tools
-setwd("/Users/frankCorrigan/Downloads")
+# setwd("/Users/frankCorrigan/Downloads")
+setwd("C:/Users/fcorrigan/Documents/Udacity/Data-Analysis-with-R/") # for Windows
 
 # Libraries used for... everything
 library(dplyr)
@@ -22,87 +27,109 @@ library(ggthemes)
 library(gridExtra)
 
 # Row names read in a bit fucked up, so little adjustment needed
-data <- read.csv("FEC_FL2012_Data.csv", row.names = NULL)
-correct_names <- names(data)[2:length(names(data))]
-data <- select(data, -election_tp)
-names(data) <- correct_names
+# data <- read.csv("FEC_FL2012_Data.csv", row.names = NULL)
+data <- read.csv("FEC_2012FL_Data.csv", row.names = NULL) # for Windows
+# correct_names <- names(data)[2:length(names(data))] # Not needed on Windows
+# data <- select(data, -election_tp) # Not needed on Windows
+# names(data) <- correct_names # Not needed on Windows
 ```
 
-# Univariate Analysis
+## Univariate Analysis
 
-```{r}
+```{r echo=FALSE}
 str(data)
 ```
 
-Initial observations. 361K donations, 19 features -- mostly categorical, one numeric, one date (that's still factor and we'll convert to date object almost immediately). There is no party affiliation perse -- will need to add that. There is a lot of inconsistency in contributor city name and zip which will have to be cleaned to do any mapping. For instance, ST. AU7GUSTINE, ST. AUGUSTINE, ST. AUGUTINE, ST, AUGUSTINE. There will be a lot of missing/invalid values in contrb employer and occupation.
+Initial observations. 361K donations, 19 features -- mostly categorical, one numeric, one date (that's still factor and we'll convert to date object almost immediately). There is no party affiliation perse -- will need to add that. There is a lot of inconsistency in contributor city name and zip which will have to be cleaned to do any mapping. For instance, ST. AU7GUSTINE, ST. AUGUSTINE, ST. AUGUTINE, ST, AUGUSTINE. There will be a lot of missing/invalid values in contrb employer and occupation. Immediately, we make the date usable and see that campaign contributions start 664 days (1.8 years)! before the election even takes place and are processed up to 55 days after.
 
-```{r}
+```{r echo=FALSE, results="hide"}
 data$date <- as.Date(data$contb_receipt_dt, format = "%d-%b-%y")
 nom_date <- as.Date("28-AUG-12", format = "%d-%b-%y")
 elec_date <- as.Date("06-NOV-12", format = "%d-%b-%y")
 data$days_from_elec <- as.integer(elec_date - data$date)
+```
+```{r echo=FALSE}
 summary(data$date)
 summary(data$days_from_elec)
 ```
 
-Immediately, we make the date usable and see that campaign contributions start 664 days! before the election even takes place and are processed up to 45 days after.
+Similarly, a histogram can give us a sense of when contributions were received relative to the election. Binwidth set to 7 so each bar represents a week and the red line is the election date.
 
-```{r}
+```{r echo=FALSE}
+qplot(date, data = data, geom = "histogram", binwidth=7) +
+      geom_vline(xintercept=as.numeric(elec_date), color="red")
+```
+
+Who ran? A table shows us there are 14 candidates (2 with less than 50 contributions that get removed -- Jill Stein and Thaddeus McCotter) and the bar graphs show us that Barack Obama had the highest number of contributions both in total and even when we subset for the time period before Mitt Romney won the Republican nomination (which was on August 28, 2012). Maybe this is only because he is the incumbent and only Democratic candidate. What changes if we look at number of contributions per day in the race?
+
+```{r echo=FALSE, fig.width = 10}
 table(data$cand_nm) # 14 unique -- Stein = 45 & McCotter = 1 -- remove these
+```
+```{r echo=FALSE, results="hide"}
 data <- subset(data, cand_nm != "Stein, Jill" & cand_nm != "McCotter, Thaddeus G") # Removes 46 observations
-ggplot(aes(x=cand_nm), data=data) +
+```
+```{r echo=FALSE}
+g1 <- ggplot(aes(x=cand_nm), data=data) +
       geom_bar() +
       ggtitle("Count of Contributions by Candidate") +
       coord_flip() # Barak most contributions by far, followed by romney, followed by Ron Paul
-ggplot(aes(x=cand_nm), data=subset(data, date < nom_date)) + # Even playing field using only days before Romney nominated Repub candidate
+g2<- ggplot(aes(x=cand_nm), data=subset(data, date < nom_date)) + # Even playing field using only days before Romney nominated Repub candidate
       geom_bar() +
-      ggtitle("Count of Contributions Pre-Nomination Date by Candidate") +
+      ggtitle("Count of Pre-Nomination Contributions Date by Candidate") +
       coord_flip() # Not a huge difference. Romney and Barack still way out front
+grid.arrange(g1,g2,ncol=2)
 ```
 
-There were 14 candidates in the race, but at least 2 with minimal donations in FL can be removed -- Jill Stein and Thaddeus McCotter. First, we see how many contributions each candidate got during the total election cycle, and then filter it down to look at only days before Mitt Romney was nominated the Republican candidate which was August 28, 2012. Barak Obama wide leader in both instances. Maybe this is only because he is the incumbent and only Democratic candidate. What changes if we look at number of contributions per day in the race?
+Barak Obama wide leader in both instances. What changes if we look at number of contributions per day in the race?
 
-```{r}
+```{r echo=FALSE, results="hide"}
 contrib_per_day_in_race <- data %>%
                            group_by(cand_nm) %>%
                            summarize(min = min(date), max = max(date), n=n()) %>%
-                           mutate(days = max-min, contrib_per_day = n/as.numeric(days)) # Herman Cain in race for 670 days (most).. Michele Bachmann in race for 219 days (least)
+                           mutate(days = max-min, contrib_per_day = n/as.numeric(days))
+```
+```{r echo=FALSE}
 ggplot(aes(x=cand_nm, y=contrib_per_day), data=contrib_per_day_in_race) +
       geom_bar(stat="identity") +
       coord_flip()
 ```
 
-Not much at all. Mr. Obama still wide leader. So, let's group the by politcal party to better understand the contribution distribution.
+Maybe this is only because he is the incumbent and only Democratic candidate. Now, what changes if we view number of contributions to each major political party? As we can see below, not much at all. Mr. Obama still wide leader. So, let's group the by politcal party to better understand the contribution distribution. Wow. Democrats had almost 1.5x as many donations as Republicans in FL in 2012. As background, Florida's electoral votes went Democrat in 2008 as well as 1996... but went Republican in 2000 and 2004. Moving on to contributor data.
 
-```{r}
+```{r echo=FALSE, results="hide"}
 data$party <- ifelse(data$cand_nm == "Obama, Barack", c("democrat"), c("republican")) 
-data$party[data$cand_nm == "Johnson, Gary Earl"] <- "libertarian"
-data$party[data$cand_nm == "Roemer, Charles E. 'Buddy' III" | data$cand_nm == "Stein, Jill"] <- "other"
+data$party[data$cand_nm %in% c("Johnson, Gary Earl", "Roemer, Charles E. 'Buddy' III")] <- "libertarian/other"
+```
+```{r echo=FALSE}
 table(data$party)
+ggplot(aes(x=party), data=data) +
+      geom_bar(stat="bin", fill=c("blue", "grey", "red"))
 ```
 
-Wow. Democrats has almost 1.5x as many donations as Republicans in FL in 2012. As background, Florida's electoral votes went Democrat in 2008 as well as 1996... but went Republican in 2000 and 2004. Moving on to contributor data.
+Moving on to the contributors themselves. For starters, how many contributions did the average individual/entity make and how many unique locations were contributors in? Using mean, length, and table functions we know that the average number of contributions was 4 (assuming different people aren't using the same name which is possible but not super important), there was 1,400 unique city names, and 51,000 unique zip codes.
 
-For starters, how many contributions did the average individual/entity make and how many unique locations were contributors in?
-
-```{r}
+```{r echo=FALSE}
 mean(table(data$contbr_nm)) # Average # of contributions is 4.4 assuming each name is unique. Wish there was a contributor id... quick search says multiple contributions from single contributor
-length(table(data$contbr_city)) # Lots of variety in single city names... not sure it's worth fixing
-length(table(data$contbr_zip))
+length(table(data$contbr_city)) 
+# Lots of variety in single city names... not sure it's worth fixing
+length(table(data$contbr_zip)) 
+# However, it is easy enough and definitely worth fixing zipcodes
 ```
 
-This shows us average number of contributions was 4 (assuming different people aren't using the same name), there was 1,400 unique city names, and 51,000 unique zip codes. Let's dive in and clean up those zip codes using the [zipcode](https://cran.r-project.org/web/packages/zipcode/zipcode.pdf) package.
+Let's dive in and clean up those zip codes using the [zipcode](https://cran.r-project.org/web/packages/zipcode/zipcode.pdf) package. The clean zipcodes function still leaves us with many 9-digit zipcodes. For those we use the first 5 digits. This gives us a more manageable 1,469 zip codes (FL actually has 1,472 zip codes).
 
-```{r}
+```{r echo=FALSE, results="hide"}
 library(zipcode) # https://cran.r-project.org/web/packages/zipcode/
 data$zip = clean.zipcodes(data$contbr_zip) # Leaves us with many 9-digit zips. Shorten to 5-digit zips.
 data$zip = substr(data$zip, 1, 5)
+```
+```{r echo=FALSE}
 length(table(data$zip))
 ```
 
-The clean zipcodes function still leaves us with many 9-digit zipcodes. For those we use the first 5 digits. This gives us a more manageable 1,468 zip codes. But we are not done, some of these zip codes are not even in Florida. So we remove those too and at the same time add latitude and longitude coordinates to our data based on these remaining zip codes.
+But we are not done, some of these zip codes are not even in Florida. So we remove those too and at the same time add latitude and longitude coordinates to our data based on these remaining zip codes. The head of our dataframe now looks as such... notice the last two columns of geographic coordinates.
 
-```{r}
+```{r echo=FALSE, results="hide"}
 data <- subset(data, zip >= 30000 & zip < 40000) # We lose 423 observations
 # Now, are all of our zip codes in FL?
 data(zipcode)
@@ -110,85 +137,81 @@ data <- left_join(data, zipcode, by="zip")
 # TODO -- check contb_city with zipcode city
 data <- filter(data, state == "FL")
 ```
-
-Regarding contributor's occupations. What is the mode of contributor occupation? How many unique occupations are in this dataset?
-
-```{r}
-tail(sort(table(data$contbr_employer)),1) 
-length(sort(table(data$contbr_occupation)))
+```{r echo=FALSE}
+head(data)
 ```
 
-I won't worry about the inconsistency in occupation for now (RETIRED, RETIRED TEACHER, HAPPILY RETIRED, ETC.), but just note that it exists.
+There are an absurd amount of occupations in our user data - 12,600 ([US BLS tracks 800 jobs across the US](http://www.bls.gov/bls/occupation.htm)). That's roughly 25 people per occupation per contribution. A quick look at the tail of the contributor's occupations and we see why. Many occupations are mispelled, mysterious, or na/missing. 
 
-Contribution amount analysis will start with a summary.
+```{r echo=FALSE}
+length(sort(table(data$contbr_occupation)))
+tail(sort(table(data$contbr_employer)),30) 
+```
 
-```{r}
+However, we also see that by far the largest contributors are retired folks. I won't worry about the inconsistency in occupation for now (RETIRED, RETIRED TEACHER, HAPPILY RETIRED, ETC.), but just note that it exists.
+
+Moving on... contribution amount analysis will start with a summary.
+
+```{r echo=FALSE}
 summary(data$contb_receipt_amt)
 ```
 
-So 25,000's looks like either an error or maybe interparty transfer. Either way, I'm not going to view it as an outlier and drop it for now. At the same time, I am going to leave negative values out -- this is money either returned to contributor or transfered to another affiliation.
+So the 25,000's look either like an error or maybe interparty transfer. Either way, I'm not going to view it as an outlier and drop it for now. At the same time, I am going to leave negative values out -- this is money either returned to contributor or transfered to another affiliation.
 
-```{r results='hide'}
+```{r echo=FALSE, results='hide'}
 data <- subset(data, contb_receipt_amt < 25000 & contb_receipt_amt > -25000)
 data <- subset(data, contb_receipt_amt > 0)
 ```
 
-The overall distribution of amount is very right skewed -- lots of small donations and some quite large one. I include a red line as an indication of the individual contribution limit.
+The overall distribution of amount is very right skewed (similar to the count of contributions) -- lots of small donations and some quite large one. I include a red line as an indication of the individual contribution limit. I use binwidth 100 since that, as we will see, is the mode contribution amount.
 
-```{r}
-qplot(contb_receipt_amt, data = data, geom = "histogram") +
-      geom_vline(xintercept=2700, color="red")
+```{r echo=FALSE}
+qplot(contb_receipt_amt, data = data, geom = "histogram", binwidth=100) +
+      geom_vline(xintercept=2600, color="red")
 ```
 
-And if we do a binwidth of 1...
+And if we do a binwidth of 1 things look similar...
 
-```{r}
+```{r echo=FALSE}
 qplot(contb_receipt_amt, data = data, geom = "histogram", binwidth = 1, color = "red") +
-      geom_vline(xintercept=2700, color="blue") 
+      geom_vline(xintercept=2600, color="blue")
 ```
 
-And what are the most common contribution amounts?
+And what are the most common contribution amounts? 100 is the mode... followed by 50, 250, and 25. All comfortable #'s.
 
-```{r}
+```{r echo=FALSE}
 tail(sort(table(data$contb_receipt_amt)), 20)
 ```
 
-100 is the mode... followed by 50, 250, and 25. All comfortable #'s. And when do these contributions happen -- a year before the election or the day before? Or somewhere inbetween? The vertical lines on the graph below represent the election day (black) and the day Mitt Romney became Republican nominee (blue).
+When do these contributions happen -- a year before the election or the day before? Or somewhere inbetween? The vertical lines on the graph below represent the election day (red) and the day Mitt Romney became Republican nominee (blue). Above we looked at count by week, so now we'll use some black magic to look at amount by month and see that the money flows in 2-3 months before the election. 
 
-```{r}
-qplot(date, data = data, geom = "histogram", binwidth = 1, color = "red") + 
+```{r echo=FALSE}
+ggplot(aes(x=30*round(as.numeric(date)/30), y=contb_receipt_amt), data=data) +
+      geom_bar(stat="identity") +
       geom_vline(xintercept = as.numeric(nom_date), color = "blue", linetype = 'longdash') +
-      geom_vline(xintercept = as.numeric(elec_date), color = "black", linetype = 'longdash') 
+      geom_vline(xintercept = as.numeric(elec_date), color = "red", linetype = 'longdash') 
 ```
 
 What was learned during the univariate analysis? This dataset has 361K observations with candiadte & contributor features. Barack Obama and Mitt Romney received the most contributions, and Barack Obama had 1.5x the number of contributions than the republicans. The dates have a wide range -- from 664 days before election day to almost a month after. Retired folks are the top contributors (makes sense in Florida). Most contributions are 'small' and most (≈62%) contributions happen within 2 month of election day.
 
+## Multivariate Analysis
 
+Now the fun begins. Earlier, we saw that Barack Obama and Mitt Romney received the most contributions. Is that same for amount of money raised? We start with boxplots for contribution amounts for each candidate and party. We see lots of different patterns between candidates. Tim Pawlenty and Rick Perry have higher medians and greater interquartile spreads while Barack Obama might just have the lowest median. It is also evident that Mitt Romney has some very wealthy contributors. The distribution of Romney's and Obama's contributions are representative of their parties as seen in the second graph below.
 
-
-
-
-
-
-
-# Multivariate Analysis
-
-Now the fun begins. Earlier, we saw that Barack Obama and Mitt Romney received the most contributions. Is that same for amount of money raised? We start with boxplots for contribution amounts for each candidate and party.
-
-```{r}
+```{r echo=FALSE}
 qplot(cand_nm, contb_receipt_amt, data = data, geom = "boxplot") + coord_flip()
 qplot(party, contb_receipt_amt, data = data, geom = "boxplot") + coord_flip() 
 ```
 
-Lots of different patterns between candidates. Tim Pawlenty and Rick Perry have higher medians while Barack Obama might just have the lowest. Also evident that Mitt Romney has some very wealthy contributors. Who raised the most money in this election...
+For reference, who raised the most money in this election? Mitt Romney.
 
-```{r}
-group_by(data, cand_nm) %>% summarize(money = sum(contb_receipt_amt))
+```{r echo=FALSE}
+group_by(data, cand_nm) %>% summarize(money = sum(contb_receipt_amt)) %>% arrange(desc(money))
 ```
 
-Oh right, Romney. When we look at the parties boxplot, again, we see that Republicans received larger donations than Democrats (in this case that's just Barack Obama). Lets look at this information in a table.
+When we look at the parties boxplot, again, we see that Republicans received larger donations than Democrats (in this case that's just Barack Obama). Lets look at this information in a table. The results are amazing. Whereas Democrats had more contributions, we see hear that Republicans raised many more dollars. Having perfect hindsight of the 2012 election, this tells me that it's not necessarily about size of contributions but about the number of donations. Next time I see a headline saying "Candidate X raised $4,000,000" I'll know that relatively unimportant :)
 
-```{r}
+```{r echo=FALSE}
 filter(data, date > nom_date) %>%
       group_by(party) %>%
       summarize(total = sum(contb_receipt_amt),
@@ -197,28 +220,34 @@ filter(data, date > nom_date) %>%
                 std = sd(contb_receipt_amt))
 ```
 
-Amazing. Whereas Democrats had more contributions, we see hear that Republicans raised many more dollars. Having perfect hindsight of the 2012 election, this tells me that it's not necessarily about size of contributions but about the number of donations. Next time I see a headline saying "Candidate X raised $4,000,000" I'll know that relatively unimportant :)
+Ok. Knowing Barack Obama received many small donations.. I am going to delineate small from large at $200 and store that as a feature in the dataset. We see this interesting matrix where Democrats contributions were split 6%large/53%small of all contributions and Republicans we split 17%large/24%small of all contributions.
 
-Knowing Barack Obama received many small donations.. I am going to delineate small from large at $200 and store that as a feature in the dataset. Also, how does that breakdown look between parties?
-
-```{r}
+```{r echo=FALSE, results="hide"}
 data$over200 <- ifelse(data$contb_receipt_amt > 200, "Large", "Small")
+```
+```{r echo=FALSE}
 prop.table(table(data$party, data$over200))
 ```
 
-Since this idea of small/large donations is fascinating to me, I want to do one more thing -- look at the distribution of 
+Since this idea of small/large donations is fascinating to me, I want to do one more thing -- look at the distribution of by politcal party
 
-```{r}
+```{r echo=FALSE}
 qplot(contb_receipt_amt, data = data, geom = "histogram", binwidth = 25, color = "red") +
       facet_wrap(~party) +
-      scale_y_log10()
+      scale_y_sqrt()
 ```
 
 Despite the in contribution size, if we scale the data using ggplots scale_y_log10() function we see that the Democrats and Republicans actually had similar contribution patterns.
 
-We know Mitt Romney raised the most money out of the Republican candidates.. but was that always true. Let's dig deeper
+We know Mitt Romney raised the most money out of the Republican candidates.. but was that always true. Let's dig deeper. To make things easier on the eyes, I filter out only participants I considered 'read' contenders -- this includes Cain, Gingrich, Obama, Paul, Romney, and Santorum. These graphs below are a bit noisy, but they capture the essence of calling the election a race... on the top Mitt Romney wins and on the bottom Barack Obama wins. This reinforces my notion that it's the # of contributions that really counts. 
 
-```{r}
+```{r echo=FALSE, fig.height=10}
+for_real <- c("Cain, Herman", "Gingrich, Newt", "Obama, Barack", "Paul, Ron", "Romney, Mitt", "Santorum, Rick") # The other guys are noise...
+
+pre_nom <- filter(data, date < nom_date, cand_nm %in% for_real) %>%
+      group_by(cand_nm, date) %>%
+      summarize(n = n(), total = sum(contb_receipt_amt))
+
 p1 <- ggplot(aes(x = date, y = total, color = cand_nm), 
       data = pre_nom) +
       scale_y_log10() +
@@ -237,9 +266,9 @@ p2 <- ggplot(aes(x = date, y = n, color = cand_nm),
 grid.arrange(p1, p2)
 ```
 
-Above, I narrowed it down to 'real contenders' and graphed both sum of contributions per day and # of contributions per day between January 2011 and the 2012 election. This graph captures the essence of calling the election a race... on the top Mitt Romney wins and on the bottom Barack Obama wins. This reinforces my notion that it's the # of contributions that really counts. Another way to look at this, maybe, is via cumulative contributions.
+Another way to look at this, maybe, is via cumulative contributions. And I'll subset the data to only contributions leading up to the election. The result? A beautiful graph. That's race data. It clearly shows the importance of contribution count.
 
-```{r}
+```{r echo=FALSE, fig.height=10}
 pre_elec <- filter(data, date < elec_date, cand_nm %in% for_real) %>%
       group_by(cand_nm, date) %>%
       summarize(n = n(), total = sum(contb_receipt_amt)) %>%
@@ -264,11 +293,9 @@ p2 <- ggplot(aes(x = date, y = cumn, color = cand_nm),
 grid.arrange(p1, p2) # Yes! Now this looks like race data to me!
 ```
 
-That's beautiful. That's race data. However, based on this I would have to say that once a candidate drops out of the race.. for instance Ron Paul.. it doesn't appear that his contributors support (at least monetarily) the frontrunner -- in this case Romnemy. Interesting, indeed, but perhaps not important.
+Next: Locations. Where are contributors and can we identify clusters of contributors to a specific political party? All I need is a simple normalized bar chart showing the split between parties across zip codes. Lots of variation from zip to zip.
 
-Locations. Where are contributors and can we identify clusters of contributors to a specific political party? All I need is a simple normalized bar chart showing the split between parties across zip codes.
-
-```{r}
+```{r echo=FALSE}
 # Is there a clear difference among zip codes where donations are going?
 by_zip <- filter(data, party %in% c("democrat", "republican")) %>%
       group_by(zip, party) %>%
@@ -280,9 +307,9 @@ ggplot(by_zip, aes(x=zip, y=pct, fill=party)) +
       scale_fill_manual(values=c("blue", "red"))
 ```
 
-Lots of variation from zip to zip. Variation is good for modeling, but as humans we need a map to get a sense of where these clusters live. 
+Variation is good for modeling, but as humans we need a map to get a sense of where these clusters live. Lots of blue (Democrat) in Miami, St. Petersburg/Tampa, and to a lesser extent Orlando and then red (Republican) spread out across the state. This makes sense.
 
-```{r}
+```{r echo=FALSE, fig.height=6}
 formap <- left_join(by_zip, zipcode, by='zip') # Ahh, let's drop these GA and other values
 
 formap_dem <- subset(formap, party == "democrat")
@@ -292,51 +319,36 @@ formap_dem$dom_party <- ifelse(formap_dem$pct > 0.5, c("Democrat"), c("Republica
 ggplot(aes(x=longitude, y=latitude, colour=dom_party), data=formap_dem) +
       geom_point() +
       scale_color_manual(values=c("blue", "red"))
-# Yes, makes sense... contributions to democrats (blue / Obama) dominate the map
 ```
 
-Lots of blue (Democrat) in Miami, Tampa, and to a lesser extent Orlando and then red (Republican) spread out across the state. This makes sense.
+Next: Wishful thinking... I was hoping to seperate 'young' versus 'old' using the occupation data grouping RETIRED into old and everyone else into young, however, the data comes out to be roughly 70young/30old where I thought it would be heavier weighted toward 'old'. This does make sense though when you realize that only 15% of the US population is over the age of 65... so 30% is relatively high.
 
-Occupations. By making another normalized bar chart like the one above for zipcode, we see similar variation within and between job fields. 
-
-```{r}
-by_occ <- filter(data, party %in% c("democrat", "republican")) %>%
-      group_by(contbr_occupation, party) %>%
-      summarize(n = n(), total = sum(contb_receipt_amt)) %>%
-      mutate(pct = n/sum(n))
-
-ggplot(by_occ, aes(x=contbr_occupation, y=pct, fill=party)) +
-      geom_bar(stat='identity') +
-      scale_fill_manual(values=c("blue", "red"))
-```
-
-I was hoping to seperate 'young' versus 'old' using the occupation data grouping RETIRED into old and everyone else into young, however, the data comes out to be roughly 65/35 where I thought it would be heavier weighted toward 'old'. This does make sense though when you realize that only 15% of the US population is over the age of 65... so 35% is relatively high.
-
-```{r}
+```{r echo=FALSE}
 data$retired <- ifelse(data$contbr_occupation == "RETIRED", "YES", "NO")
 test <- table(data$retired, data$party)
 prop.table(test, 2)
 ```
 
-And just a few more things before we start to model this. In total, we saw a lot of contributions coming in 2 months within the election, but what if we break this down by candidate?
+And just a few more things before we start to model this. In total, we saw a lot of contributions coming in 2 months within the election, but what if we break this down by candidate? Here  plot the median contribution by day per candidate. Maybe not important, but interesting that median donation size typically falls as election nears -- that probably says something about who donates when. In these graphs, the red line indicates Romney's nomination date and blue the election date. We can see who left the race early (Bachmann, Cain, Perry).
 
-```{r}
-don_by_date <- subset(data, contb_receipt_amt > 0 & contb_receipt_amt < 15000) %>%
+```{r echo=FALSE}
+don_by_date <- subset(data, contb_receipt_amt > 0 & contb_receipt_amt < 25000) %>%
       group_by(cand_nm, date) %>%
       summarize(donation = median(contb_receipt_amt))
 
 ggplot(aes(x=date, y=donation), # Donation size got smaller as time went on..
       data = don_by_date) +
       geom_line() +
-      geom_vline(xintercept = as.numeric(nom_date), color = "red", linetype = 'longdash') +
+      geom_vline(xintercept = as.numeric(nom_date), color = "blue", linetype = 'longdash') +
+      geom_vline(xintercept = as.numeric(elec_date), color = "red", linetype = 'longdash') + 
       facet_wrap(~cand_nm) +
       scale_y_log10() +
       geom_smooth()
 ```
 
-In the graph above, we graph median donation amount over time. The red line indicates Romney's nomination date. We can see who left the race early (Bachmann, Cain, Perry). We can also see that Romney support really jumped up after his nomination as Republican nominee. To confirm the notion that number of contributions is more important than sum of them, lets look at the same graph as above but by contribution count over time.
+To confirm the notion that number of contributions is more important than sum of them, lets look at the same graph as above but by contribution count over time. Ahh, two are not like the others...
 
-```{r}
+```{r echo=FALSE}
 don_by_date <- filter(data, contb_receipt_amt > 0 & contb_receipt_amt < 15000 & date < elec_date) %>%
       group_by(cand_nm, date) %>%
       summarize(donation = n())
@@ -355,15 +367,25 @@ ggplot(aes(x=date, y=donation),
 
 As expected. 
 
-What was learned during the mulitivariate analysis? Mitt Romney raised the most money in the 2016 US Presidential election and on averaged received larger contributions than Barack Obama (however across the board small contributions are the norm). We compared this to the count of contributions by each candiata. Each measure tells a different story fo the race. Maping contributors by zipcode we see bigger clusters of Democratic contributions in the Miami, Tampa, and Orlando areas. We'll use these lessons in an attempt to create a model that uses contributor characteristics to predict which political party that individual will contribute to.
+What was learned during the mulitivariate analysis? Mitt Romney raised the most money in the 2016 US Presidential election and on averaged received larger contributions than Barack Obama (however across the board small contributions are the norm). We compared this to the count of contributions by each candiata. Each measure tells a different story fo the race. Maping contributors by zipcode we see bigger clusters of Democratic contributions in the Miami, St. Petersburg/Tampa, and Orlando areas. We'll use these lessons in an attempt to create a model that uses contributor characteristics to predict which political party that individual will contribute to.
 
-# Modeling
+## Modeling
 
-The dependent variable is binary -- Democratic contribution or Republican? -- so I use a logistic regression model. I began by splitting the data into training and test sets and started with a model that used latitude, longitude, contribution amount, and whether the contribution amount was above or below $200.
+In this section we create a logistic regression model in an attempt to use a contributor's characteristics (location, contribution amount, etc.) to predict which political party they are contributing to. 
 
-```{r}
+We began by
+
+A. Filtering only Democrat and Republican contributions
+B. splitting the data into training and testing sets
+C. And start with a model that uses latitude, longitude, contribution amount, retired? and over200?
+
+The model summary looks OK. All p-values are small (but given our sample size of 300K, I would expect that) and all coefficients are quite small.
+
+```{r echo=FALSE}
+sub <- filter(data, party %in% c("democrat", "republican"))
+
 ## Sample for modeling
-smp <- sample_n(data, 300000)
+smp <- sample_n(sub, 5000)
 
 ## 75% of the sample size for training
 smp_size <- floor(0.75 * nrow(smp))
@@ -372,33 +394,33 @@ smp_size <- floor(0.75 * nrow(smp))
 set.seed(1234)
 train_ind <- sample(seq_len(nrow(smp)), size = smp_size)
 
-training <- data[train_ind, ]
-testing <- data[-train_ind, ]
-
-## Model time -- prob of donating to republican
-model <- glm(as.factor(party) ~ latitude + longitude + contb_receipt_amt + over200,
+training <- smp[train_ind, ]
+testing <- smp[-train_ind, ]
+## Probability of donating to Republican
+model1 <- glm(as.factor(party) ~ latitude + longitude + contb_receipt_amt + retired + over200,
              data = training,
              family = "binomial")
 ```
-
-Immediately thereafter, I ran an anova chisq test to ensure all the variables were significant. 
-
-```{r}
-anova(model, test="Chisq")
+```{r echo=FALSE}
+summary(model1)
 ```
 
-Low and behold, all variables are statistically significant. In order to test the goodness of fit of the model I use both a chisq test and a confusion matrix.
+If we calculate the odd ratios, it seems like some of the variables may be statistically significant.. but not practically significant. For instance, the odds ration for latitude is 1.09 which means that holding all other variables constant, the odds that a contribution is going to a Republican is 9% higher than going to a Democrat. The longitude and contribution amount odds ratio also are not that impressive. However, the retired variable and the over 200 variable seem practically significant. These say that the odds of the contribution going to a Republican increases 22% and .28% respectively. 
 
-```{r}
-with(model, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+```{r echo=FALSE}
+exp(model1$coeff)
 ```
 
-The pchisq test p-value is 0 which we can interpret to mean that the model is significantly better than guessing Democrat or Republican. The size of this dataset made me question this significance and the 'p-value problem'. [Read more here.](http://www.galitshmueli.com/system/files/Print%20Version.pdf) However, even when I use samples of the data as small as 1,000 observations... the pchisq p-value still falls below 0.01. 
+Before running a second iteration of this model, let's run the p-value of a chisq test to check model significance as well as a confusion matrix. The pchisq test p-value is effectively 0 which we can interpret to mean that the model is significantly better than guessing Democrat or Republican. The size of this dataset made me question this significance and the 'p-value problem'. [Read more here.](http://www.galitshmueli.com/system/files/Print%20Version.pdf) However, even when I use samples of the data as small as 1,000 observations... the pchisq p-value still falls below 0.01. 
+
+```{r echo=FALSE}
+with(model1, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+```
 
 Second measure of fit. If we used our model to make predictions on our test set... how accurate would it be?
 
-```{r}
-predicted_probs = predict(model, testing, type="response")
+```{r echo=FALSE}
+predicted_probs = predict(model1, testing, type="response")
 predicted_party = rep("democrat", nrow(testing))
 predicted_party[predicted_probs > 0.5] = "republican"
 
@@ -406,11 +428,39 @@ table(predicted_party, testing$party)
 mean(predicted_party != testing$party)
 ```
 
-So, we end up with a 31% error rate in our predictions. The model is better than guessing, but there is indeed some margin of error there. If I was a campaign manager, I would expect my data science team to collect more characteristics on the contributors in order to build a more accurate tool.
+So, we end up with a 31% error rate in our predictions. Let's try a second, simpler model with only 2 independent variables: retired? and over200?
 
-# Final Plots and Summary
+```{r echo=FALSE}
+model2 <- glm(as.factor(party) ~ retired + over200,
+             data = training,
+             family = "binomial")
+```
+```{r echo=FALSE}
+summary(model2)
+exp(model2$coeff)
+```
 
-```{r}
+In model 2, our p-values remain significant and our odds ratios remain similar. The chisq p-value remains at 0 and the error rate remains at 30% (both below). So, it looks like our second model, with less variables, has just as good of fit as our initial model with more variables.
+
+```{r echo=FALSE}
+with(model2, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+```
+```{r echo=FALSE}
+predicted_probs = predict(model2, testing, type="response")
+predicted_party = rep("democrat", nrow(testing))
+predicted_party[predicted_probs > 0.5] = "republican"
+
+table(predicted_party, testing$party)
+mean(predicted_party != testing$party)
+```
+
+## Final Plots and Summary
+
+In this section, we brush up the best looking and most informative plots we discovered above.
+
+This first plot reveals the importance of number of contributions over size of the contributions. In the top chart -- cumulative sum -- Mitt Romney's blue line is the leader. In the bottom chart -- cumulative count -- Barack Obama is the leader up to and on election day.
+
+```{r echo=FALSE, fig.height = 10}
 pre_elec <- filter(data, date < elec_date, cand_nm %in% for_real) %>%
       group_by(cand_nm, date) %>%
       summarize(n = n(), total = sum(contb_receipt_amt)) %>%
@@ -420,40 +470,65 @@ pre_elec <- filter(data, date < elec_date, cand_nm %in% for_real) %>%
 p1 <- ggplot(aes(x = date, y = cumtotal, color = cand_nm), 
       data = pre_elec) +
       scale_y_log10() +
-      ggtitle("Cumsum of Contributions") +
+      labs(title="Cumulative Sum of Contributions", x="Date", y="Cumulative Sum") +
       geom_jitter(alpha=1/10) + 
-      geom_smooth(method="loess")
+      geom_smooth(method="loess") +
+      theme_pander()
 
 # Count of Monetary Contributions for 'Real' cadidates before Romney's nomination date
 p2 <- ggplot(aes(x = date, y = cumn, color = cand_nm), 
       data = pre_elec) +
       scale_y_log10() +
-      ggtitle("Cum # of Contributions") +
+      labs(title="Cumulative Count of Contributions", x="Date", y="Cumulative Count") +
       geom_jitter(alpha=1/10) + 
       geom_smooth(method="loess") +
-      theme_wsj()
+      theme_pander()
 
 grid.arrange(p1, p2)
 ```
 
-Tell me about this plot...
+Using ggmap we are able to see areas of high volume contribution giving. This includes Miami down south, St. Petersburg/Tampa to the west, Orlando in central FL, Jacksonville in the northeast, and to a lesser extent Pensicola and Tallahassee on the panhandle.
 
-```{r}
-ggplot(aes(x=longitude, y=latitude, colour=dom_party), data=formap_dem) +
-      geom_point() +
-      scale_color_manual(values=c("blue", "red"))
+```{r echo=FALSE, message=FALSE, fig.width = 7, fig.height=7}
+# loading the required packages
+require(ggmap)
+
+# creating a sample data.frame with your lat/lon points
+lon <- data$longitude
+lat <- data$latitude
+df <- as.data.frame(cbind(lon,lat))
+
+# getting the map
+mapgilbert <- get_map(location = c(lon = mean(df$lon), lat = mean(df$lat)), zoom = 6,
+                      maptype = "roadmap", scale = 2)
+
+# plotting the map with some points on it
+ggmap(mapgilbert) +
+  geom_point(data = df, aes(x = lon, y = lat, fill = "red", alpha = 0.8), size = 2, shape = 21) +
+  guides(fill=FALSE, alpha=FALSE, size=FALSE) +
+  ggtitle("Location of Contributors")
+
+# Code help from ... 
+# http://stackoverflow.com/questions/22578538/r-cannot-find-the-function-get-map
+# Thanks!
+
 ```
 
-Make this more mappish and tell me about it.
+Although simple, this overlay histogram below is insightful. The orange clump to the left shows us that contribution size for Democrats is smaller, but taller, than the other parties contirbutions. Republicans are a bit higher and not as many as Democrats. And Liberatrian and Other contributors are fewer in number but they are true believers -- they contribute the biggest.
 
-```{r}
+```{r echo=FALSE}
 ggplot(data, aes(x=contb_receipt_amt, fill=party)) +
       geom_histogram(alpha=0.2, position="identity", binwidth=log(1.3)) +
       scale_x_log10()
 ```
 
-The orange clump to the left shows us that contribution size for Democrats is smaller, but taller, than the other parties contirbutions. Republicans are a bit higher and not as many. Liberatrian and Other contributors are fewer in number but they are true believers -- they contribute the biggest. 
 
-# Reflection
+## Reflection
 
-Paragraph about what you learned... and what you did not
+The state of Florida, every four years, is a definitive swing state in the US Presidential election. Since 1996 -- 5 election cycles ago -- the candidate that captured Florida's electoral votes became the next US President. This analysis identified several interesting characteristics about financial campaign contributors in this state. Whether you are a campaign manager trying to formulate a campaign strategy in Florida or a citizen wondering who to throw your support behind, there are several things to note. First, the number of contributions a candidate received is more important than the size of contributions. This means that voters might want to look at # of contributions candidates are receiving rather than listen to media reports of total dollar values candidates are receiving. Second, folks in cities tend to contribute to the Democrat party. Campaign managers should have a sense of where they want to spend their advertisting dollars and location tendencies will help. Third, senior citizens tend to be the largest contributors in Florida and lean slightly Republican. Again campaign managers take note (and I'm sure they do).
+
+The ggplot2 and dplyr packages for r were indespensible for this project. Most code written included some function in one of these packages. A sincere thanks to the creators and maintainers of these packages is in order. 
+
+Challenges and next steps. Due to the nature of the state's political lean, this data was difficult to model. I am still not convinced that there is a good way to identify whether a individual will contribute right or left. However, I believe the high level lessons from the data contribute to some form of understanding. We did see some consistency in contribution size and location across contributions. However, the next step is to explore this data A) across states in 2012 and B) across time in older elections. Two final ideas. First, there is an abundance of poll data that exists and it would be a wise (although probably time-consuming effort) to add this poll data to contribution data in order to find significant relationships. Second, it would be good to build a time series model to forecast # of contributions in 2012 and then apply it to the 2016 election data to date.
+
+Happy to update report at request.
