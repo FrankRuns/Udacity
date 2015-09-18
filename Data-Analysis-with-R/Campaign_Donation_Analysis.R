@@ -168,6 +168,17 @@ table(data$receipt_desc) # I don't understand most of these.. I believe it's eit
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 # Bivariate Analysis
 qplot(cand_nm, contb_receipt_amt, data = data, geom = "boxplot") + coord_flip() # It looks like a lot of people supported Barack over any other candidate... but I dont think that's fair since he was the incumbent and only Demo contender. Let's look at party instead.
 
@@ -192,7 +203,7 @@ data$over200 <- ifelse(data$contb_receipt_amt > 200, "Large", "Small")
 
 ### group_by(data, party, over2700) %>% summarize(count=n()) 
 # Manually.. Repubs = 0.0003 or 0.3%. Democs = 0.000001.. tiny. Does this hold true if we look at amounts rather than counts?
-group_by(data, party, over2700) %>% summarize(n=n(), sum=sum(contb_receipt_amt)) 
+group_by(data, party, over200) %>% summarize(n=n(), sum=sum(contb_receipt_amt)) 
 # Manually... 10512/(10512+19243800) for Dems... 157894/(157894+55488477) for Reps. Same outcome. Most campaign money comes from individual donars.
 # However, I'm not convinced this is right. A PAC doesn't necessarily have to give 
 # http://www.nytimes.com/interactive/2016/us/elections/election-2016-campaign-money-race.html?_r=2
@@ -294,13 +305,6 @@ ggplot(by_occ, aes(x=contbr_occupation, y=pct, fill=party)) +
 
 # Further exploration before modeling data...
 
-# Histogram of contributions by candidate
-ggplot(aes(x=contb_receipt_amt),
-      data=data) +
-      geom_histogram(binwidth=100, color="red") +
-      facet_wrap(~cand_nm)
-      # Well, easy to see who's got the money...
-
 # Great now let's see if the donation histogram by candidate changes removing those 2 months of data
 # Ahh... 100 seems to be mode followed by 50, 250, 25... all nice easy numbers
 
@@ -381,8 +385,6 @@ ggplot(aes(x=contb_receipt_amt), data = filter(data, cand_nm %in% top_4)) +
 # Found this: http://www.nytimes.com/2015/05/03/us/politics/fec-cant-curb-2016-election-abuse-commission-chief-says.html
 
 # Very different than what I thought. Suspected big hitteres get more 'big' contributions while the smaller guys get more small contributions. Opposite looks true.
-
-data$loc <- abs(data$latitude * data$longitude)
 
 by_zip <- filter(data, party %in% c("democrat", "republican")) %>%
       group_by(zip, party) %>%
