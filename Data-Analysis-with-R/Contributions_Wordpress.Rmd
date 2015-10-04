@@ -1,0 +1,161 @@
+A Look at Election Campaign Contributions with R
+========================================================
+
+```{r echo=FALSE, result="hide", warning=FALSE, message=FALSE}
+library(ggmap)
+library(maptools)
+library(rgeos)
+library(dplyr)
+library(rgdal)
+setwd("/Users/frankCorrigan/Downloads/cenzcta2010_feb12/")
+flo = readOGR(".","cenzcta2010_feb12") %>% spTransform(CRS("+proj=longlat +datum=WGS84"))
+flo.f <- fortify(flo, region="ZCTA5CE10")
+
+setwd("/Users/frankCorrigan/Downloads")
+
+library(ggplot2)
+library(ggthemes)
+library(gridExtra)
+
+data <- read.csv("FEC_FL2012_Data.csv", row.names = NULL) 
+correct_names <- names(data)[2:length(names(data))] 
+data <- select(data, -election_tp)
+names(data) <- correct_names 
+
+data$date <- as.Date(data$contb_receipt_dt, format = "%d-%b-%y")
+nom_date <- as.Date("28-AUG-12", format = "%d-%b-%y")
+elec_date <- as.Date("06-NOV-12", format = "%d-%b-%y")
+data$days_from_elec <- as.integer(elec_date - data$date)
+
+data <- subset(data, cand_nm != "Stein, Jill" & cand_nm != "McCotter, Thaddeus G")
+
+data$party <- ifelse(data$cand_nm == "Obama, Barack", c("democrat"), c("republican")) 
+data$party[data$cand_nm %in% c("Johnson, Gary Earl", "Roemer, Charles E. 'Buddy' III")] <- "libertarian/other"
+
+library(zipcode) # https://cran.r-project.org/web/packages/zipcode/
+data$zip <- clean.zipcodes(data$contbr_zip)
+data$zip <- substr(data$zip, 1, 5)
+
+data <- subset(data, zip >= 30000 & zip < 40000)
+data(zipcode)
+data <- left_join(data, zipcode, by="zip")
+data <- filter(data, state == "FL")
+
+data$retired <- ifelse(data$contbr_occupation == "RETIRED", "YES", "NO")
+
+data <- subset(data, contb_receipt_amt < 25000 & contb_receipt_amt > -25000)
+data <- subset(data, contb_receipt_amt > 0)
+
+data$over200 <- ifelse(data$contb_receipt_amt > 200, "Large", "Small")
+
+for_real <- c("Cain, Herman", "Gingrich, Newt", "Obama, Barack", "Paul, Ron", "Romney, Mitt", "Santorum, Rick")
+
+```
+
+The state of Florida, every four years, is a definitive swing state in the US Presidential election. Since 1996 -- 5 election cycles ago -- the candidate that captured Florida's electoral votes became the next US President. Noting a strong correlation between campaign spending and election results (as well as the notion of needing to raise money to spend money) and having perfect hindsight of knowing the 2012 Presidential election outcome, analyzing campaign contributions data can help us put these results into context.
+
+In Florida, which candidates received the most dollars and from how many people? Which is a better indicator for race position? Are there distinct characteristics in the data between Republican contributors, Democratic contributors.. and other party contributors? Is the total campaign donation as important as count of contributors and/or amount per contributor? And so on...
+
+I conducted this analysis as part of Udacity's Data Analysis with R and my full code can be found [here]('https://github.com/FrankRuns/Udacity/tree/master/Data-Analysis-with-R'). The remainder of this post is an overview of the most interesting findings.
+
+# Data Overview
+
+Data source [here]('http://www.fec.gov/disclosurep/PDownload.do'). Roughly 361K contributions starting 1.8 years prior to election date and processing payments up to a month after. 14 total candidate (1 Democrat). 1,468 zip codes after some minor cleaning and around 12,600 unique occupations telling us that the occupation data is a disaster [US BLS tracks 800 jobs across the US](http://www.bls.gov/bls/occupation.htm). Most frequent contribution amount is $100. Now let's go a bit deeper...
+
+# 1. Contribution #  >  Contribution $
+
+While total Republican contribution dollars trumped those of Democrats by a factor of nearly 3 ($65M to Repubs and $23M to Dems), total # of Democrat contributions outpaced the Republican count 1.5x (210K to 145K). This tells me there was broad Democrat support in FL in 2012. Plotting the cumulative contribution dollars over the course of the campaign cycle shows Mitt Romney as the powerhouse player.
+
+```{r echo=FALSE, fig.height = 5, fig.width = 10}
+data %>% group_by(party) %>% summarize(amt = sum(contb_receipt_amt), count = n())
+
+pre_elec <- filter(data, date < elec_date, cand_nm %in% c("Cain, Herman", "Gingrich, Newt", "Obama, Barack", "Paul, Ron", "Romney, Mitt", "Santorum, Rick")) %>%
+      group_by(cand_nm, date) %>%
+      summarize(n = n(), total = sum(contb_receipt_amt)) %>%
+      mutate(cumn = cumsum(n), cumtotal = cumsum(total))
+
+# Sum of Monetary Contributions for 'Real' cadidates before Romney's nomination date
+ggplot(aes(x = date, y = cumtotal, color = cand_nm), 
+      data = pre_elec) +
+      scale_y_log10() +
+      labs(title="Cumulative Sum of Contributions", x="Date", y="Cumulative Sum [$]") +
+      geom_jitter(alpha=1/10) + 
+      geom_smooth(method="loess") +
+      theme_solarized()
+```
+
+But, if we do the same thing for cumulative # of contributions the front runner of the race and eventual President elect pulls ahead.
+
+```{r echo=FALSE, fig.height = 5, fig.width = 10}
+ggplot(aes(x = date, y = cumn, color = cand_nm), 
+      data = pre_elec) +
+      scale_y_log10() +
+      labs(title="Cumulative Count of Contributions", x="Date", y="Cumulative Count [#]") +
+      geom_jitter(alpha=1/10) + 
+      geom_smooth(method="loess") +
+      theme_solarized()
+```
+
+No matter how much money an individual has, when they enter the ballot booth their vote is just as important as the next person. The importance of broad support is clear in this case. When FEC contribution data is released in October 2015, maybe we will see a similar patter emerge in the state of Florida.
+
+# 2. Contribution Size Matters
+
+If Republicans raised more total dollars with fewer contributions than Democrats, it must be true that the average Republican contribution was larger. The median Republican contribution was $100 vs. Demorcrats $35. That's a statistically significant difference using the wilcox.test in r! Practically significant in real life too :) An overlay histogram displays this nicely with a blue line representing the Democrat median and a red line representing Republican median.
+
+```{r echo=FALSE, fig.height = 5, fig.width = 10}
+# wilcox.test(contb_receipt_amt ~ party, data = subset(data, party %in% c("democrat", "republican")))
+ggplot(data = subset(data, party %in% c("democrat", "republican")), aes(x=contb_receipt_amt, fill=party)) +
+      geom_histogram(alpha=0.2, position="identity", binwidth=log(1.3)) +
+      geom_vline(xintercept=35, color="blue") +
+      geom_vline(xintercept=100, color="red") +
+      scale_x_log10() +
+      labs(title="Contribution Amount Histograms by Party", x="Log10() Contribution Amount", y="Count") +
+      theme_solarized()
+```
+
+# 3. Cities Lean Democrat
+
+To some, this is conventional wisdom, but it's always nice to see another map. The map below leverages google maps combined with ggplot graphing library. I've divided each zip code between Barack Obama and Mitt Romney based on # of contributions coming from that zip. On the map, if >50% of contributions went to Barack Obama, the zip code is blue. If >50% of contributions went to Mitt Romney, the zip code is red. As you can see, some zip codes have no contributions (or at least no contribution data).
+
+```{r echo=FALSE, fig.heigh = 8, fig.width=8, warnings=FALSE, message=FALSE}
+data_small <- select(data, zip, cand_nm, party)
+
+data_small <- filter(data_small, cand_nm %in% c("Obama, Barack", "Romney, Mitt"))
+
+don_data_pct <- filter(data_small, party %in% c("democrat", "republican")) %>%
+      group_by(zip, party) %>%
+      summarize(sub_total=n()) 
+don_data_dem <- filter(don_data_pct, party == "democrat")
+
+don_data_totals <- filter(data_small, party %in% c("democrat", "republican")) %>%
+      group_by(zip) %>%
+      summarize(total=n()) 
+
+dem <- left_join(don_data_totals, don_data_dem, by="zip")
+dem_last <- dem %>% mutate(prop = round(sub_total/total)) %>%
+      select(zip, prop) # 0 = rep, 1 = dem
+
+colnames(dem_last)[1] <- "id"
+
+# Merge dem_last data with area datas
+dem_map <- left_join(flo.f, dem_last, by='id')
+
+mapage <- get_map(location = c(lon = -83.5, lat = 27.77),
+                  color = "color",
+                  zoom = 7)
+
+ggmap(mapage) + 
+      geom_polygon(aes(fill = prop, x = long, y = lat, group = group), 
+                   data = dem_map,
+                   alpha = 0.6) +
+      scale_fill_gradient(low = "red", high = "blue") +
+      labs(x="Longitude", y="Latitude") +
+      theme(legend.position="none")
+```
+
+The major cities -- including Miami, St. Petersburg/Tampa, and Orlando -- are heavy blue. Overall, consistent with findings about Barack Obama getting the greater share of contributions, the state is painted not red... but blue.
+
+# Conclusion
+
+Florida contribution data in 2012 seemed to point us to the election results. However, there is a lot more that might be done. We would want to find similar results going back many Presidential elections and not just 2012. Perhaps 2012 was an anomoly? Another important investigation would involve looking at this data nationwide... at least in the other typical swing states. Do the same findings hold true. Unfortunately, we one state does not make a pattern. 
+
