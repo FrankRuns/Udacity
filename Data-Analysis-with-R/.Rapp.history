@@ -1,0 +1,383 @@
+myMatrix <- myVector
+?matrix
+myMatrix2 <- matrix(1:20, nrow=4, ncol=5)
+identical(myMatrix, myMatrix2)
+patients <- c("Bill", "Gina", "Kelly", "Sean")
+cbind(patients, myMatrix)
+myData <- data.frame(patients, myMatrix)
+myData
+class(myData)
+cnames <- c("patient", "age", "weight", "bp","rating", "test")
+colnames(myData) <- cnames
+myData
+bye()
+x <- 4
+class(x)
+x<-c(4,TRUE)
+class(x)
+x
+x<-c(1,3,5)
+y<-c(3,2,10)
+x
+y
+cbind(x,y)
+f <- cbind(x,y)
+class(f)
+x <- list(2,"a","b",TRUE)
+f <- x[[1]]
+f
+class(f)
+x<-1:4
+y<-2
+f<-x+y
+f
+class(f)
+x<-c(17,14,4,5,13,12,10)
+f<-x[x>=11]<-4
+f
+x<-c(17,14,4,5,13,12,10)
+x[x>=11]<-4
+x
+data <- read.table("~/Desktop/hw1_data.csv", header=TRUE, sep=",")
+head(data)
+names(data)
+data[2,]
+data[3,]
+data[1:2,]
+nrow(data)
+data[-1:2,]
+tail(data)
+data[47,]
+is.na[,1]
+data[ ,is.na]
+is.na(data)
+is.na(data[,1])
+sum(is.na(data[,1]))
+mean(data$Ozone)
+mean(data, na.rm=TRUE)
+mean(data$Ozone, na.rm=TRUE)
+above31 <- data[data$Ozone > 31]
+above31 <- data[data$Ozone > 31, ]
+head(above31)
+above31
+data
+cleanData <- complete.cases(data)
+cleanData
+data$Ozone
+above31 <- data[data$Ozone>31,]
+above31
+subset <- data$Ozone > 31 & data$temp > 90
+subset
+subset <- data[data$Ozone > 31 & data$temp > 90]
+subset
+subset <- data[data$Ozone > 31 & data$temp > 90,]
+subset
+data
+names(data)
+subset <- data[data$Ozone > 31 & data$Temp > 90, ]
+subset
+mean(subset$Solar.R)
+data.ozone <- subset(data, Ozone > 31)
+data.temp <- subset(data, Temp > 90)
+data.both <- subset(data, Ozone > 31 & Temp > 90)
+data.both
+mean(data.both$Solar.R)
+data.subset <- subset(data, Month == 6)
+mean(data.subset$Temp)
+data.subset <- subset(data, Month == 5)
+max(data.subset$Ozone)
+max(data.subset$Ozone, is.na=TRUE)
+?max
+max(data.Ozone, is.na=TRUE)
+max(data$Ozone, is.na=TRUE)
+max(data$Ozone, is.na=FALSE)
+max(data$Month, is.na=FALSE)
+max(data$Month, is.na=TRUE)
+max(data$Ozone, is.na=TRUE)
+data$Ozone
+data.may <- subset(data, Month == 5)
+data.may
+max(data.may, rm.na=TRUE)
+max(data.may$Ozone, rm.na=TRUE)
+bad <- is.na(data.may$Ozone)
+bad
+max(data.may$Ozone)
+debug(ls)
+ls()
+n
+library(caret)
+library(kernlab)
+data(spam)
+inTrain <- createDataPertition(y=spam$type, p=0.75, list=FALSE)
+inTrain <- createDataPartition(y=spam$type, p=0.75, list=FALSE)
+class(inTrain)
+head(inTrain)
+dim(inTrain)
+inTrain[10,]
+inTrain[1:10,]
+dim(spam)
+3451/4601
+training <- spam[inTrain,]
+test <- spam[-inTrain,]
+class(training)
+str(training)
+folds <- createFolds(y=spam$type, k=10, list=TRUE, returnTrain=TRUE)
+sapply(folds, length)
+library(AppliedPredictiveModeling)#
+library(caret)#
+data(AlzheimerDisease)
+install.packages("AppliedPredictiveModeling")
+library(AppliedPredictiveModeling)
+data(AlzheimerDisease)
+adData = data.frame(diagnosis,predictors)#
+trainIndex = createDataPartition(diagnosis, p = 0.50,list=FALSE)#
+training = adData[trainIndex,]#
+testing = adData[-trainIndex,]
+dim(training)
+dim(testing)
+adData = data.frame(diagnosis,predictors)#
+trainIndex = createDataPartition(diagnosis,p=0.5,list=FALSE)#
+training = adData[trainIndex,]#
+testing = adData[trainIndex,]
+dim(training)
+dim(testing)
+adData = data.frame(diagnosis,predictors)#
+trainIndex = createDataPartition(diagnosis, p = 0.50)#
+training = adData[trainIndex,]#
+testing = adData[-trainIndex,]
+library(AppliedPredictiveModeling)
+data(concrete)
+library(caret)
+set.seed(975)
+inTrain <- createDataPartition(mixtures$compressiveStrngth, p=0.75)[[1]]
+inTrain <- createDataPartition(mixtures$CompressiveStrngth, p=0.75)[[1]]
+inTrain <- createDataPartition(mixtures$CompressiveStrength, p=0.75)[[1]]
+data(mtcars)
+head(mtcars)
+library(caret)
+T <- nearZeroVar(mtcars, saveMetrics=TRUE)
+T
+library(ElemStatLearn)#
+data(SAheart)#
+set.seed(8484)#
+train = sample(1:dim(SAheart)[1],size=dim(SAheart)[1]/2,replace=F)#
+trainSA = SAheart[train,]#
+testSA = SAheart[-train,]
+str(trainSA)
+set.seed(13234)
+library(caret)
+model <- train(chd ~ age + alcohol + obesity + tobacco + typea + ldl, method = "glm", family = "binomial", data = trainSA)
+missClass = function(values,prediction){sum(((prediction > 0.5)*1) != values)/length(values)}
+missClass
+missClass(model)
+prediction <- predict(model, newdata = testSA$chd)
+trainSA$age
+testSA$age
+print(model)
+prediction <- predict(model, newdata = testSA)
+missClass(model)
+missClass(model, prediction)
+missClass(testSA$chd, prediction)
+library(ElemStatLearn)#
+data(vowel.train)#
+data(vowel.test)
+head(vowel.train)
+train <- vowel.train
+test <- vowel.test
+train$y <- as.factor(train$y)
+test$y <- as.factor(test$y)
+set.seed(338833)
+?caret
+?train
+model <- train(y ~ ., method = "rf", data = train)
+varImp(model)
+rm(list-ls())
+rm(list=ls())
+library(ElemStatLearn)#
+data(vowel.train)#
+data(vowel.test)
+vowel.train$y <- as.factor(vowel.train$y)
+str(vowel.train)
+vowel.test$y <- as.factor(vowel.test$y)
+vowel.test$y
+set.seed(338833)
+set.seed(33833)
+model <- train(y ~ ., method = "rf", data = vowel.train)
+varImp(model)
+model$finalModel$importance
+set.seed(125)
+model <- train(y ~ ., method = "rf", data = vowel.train)
+varImp(model)
+library(ggplot2); library(rgdal); library(ggmap)#
+setwd("/Users/frankCorrigan/Desktop")#
+area <- readOGR(dsn = "tl_2012_12_cousub", layer = "tl_2012_12_cousub")#
+sub.area <- area[area$NAME %in% c("Alford", "Plant City"),]
+sub.area <- area[area$NAME %in% c("Alford", "Tampa", "Ruskin", "Plant City"),]
+area.f <- fortify(sub.area, region="NAME")
+ggplot(data = area.f, aes(x = long, y = lat, group = group)) +#
+      geom_path()#
+#
+ggmap(mapage) +#
+      geom_polygon(aes(x = long,#
+                       y = lat,#
+                       group = group),#
+                   data = area.f,#
+                   color = colors[9],#
+                   fill = colors[6],#
+                   alpha = 0.5) +#
+      labs(x = "Longitude",#
+           y = "Latitude")
+mapage <- get_map(location = c(lon = -83.5, lat = 27.77),#
+                    color = "color",#
+                    zoom = 7)
+ggmap(mapage) +#
+      geom_polygon(aes(x = long,#
+                       y = lat,#
+                       group = group),#
+                   data = area.f,#
+                   color = "black",#
+                   fill = "red",#
+                   alpha = 0.5) +#
+      labs(x = "Longitude",#
+           y = "Latitude")
+head(area.f)
+setwd("/Users/frankCorrigan/Downloads")#
+#
+library(dplyr)#
+library(ggplot2)#
+library(ggthemes)#
+library(gridExtra)#
+#
+data <- read.csv("FEC_FL2012_Data.csv", row.names = NULL) #
+correct_names <- names(data)[2:length(names(data))] #
+data <- select(data, -election_tp)#
+names(data) <- correct_names #
+#
+data$date <- as.Date(data$contb_receipt_dt, format = "%d-%b-%y")#
+nom_date <- as.Date("28-AUG-12", format = "%d-%b-%y")#
+elec_date <- as.Date("06-NOV-12", format = "%d-%b-%y")#
+data$days_from_elec <- as.integer(elec_date - data$date)#
+#
+data <- subset(data, cand_nm != "Stein, Jill" & cand_nm != "McCotter, Thaddeus G")#
+#
+data$party <- ifelse(data$cand_nm == "Obama, Barack", c("democrat"), c("republican")) #
+data$party[data$cand_nm %in% c("Johnson, Gary Earl", "Roemer, Charles E. 'Buddy' III")] <- "libertarian/other"#
+#
+library(zipcode) # https://cran.r-project.org/web/packages/zipcode/#
+data$zip <- clean.zipcodes(data$contbr_zip)#
+data$zip <- substr(data$zip, 1, 5)#
+#
+data <- subset(data, zip >= 30000 & zip < 40000)#
+data(zipcode)#
+data <- left_join(data, zipcode, by="zip")#
+data <- filter(data, state == "FL")#
+#
+data$retired <- ifelse(data$contbr_occupation == "RETIRED", "YES", "NO")#
+#
+data <- subset(data, contb_receipt_amt < 25000 & contb_receipt_amt > -25000)#
+data <- subset(data, contb_receipt_amt > 0)#
+#
+data$over200 <- ifelse(data$contb_receipt_amt > 200, "Large", "Small")#
+#
+for_real <- c("Cain, Herman", "Gingrich, Newt", "Obama, Barack", "Paul, Ron", "Romney, Mitt", "Santorum, Rick")
+data <- read.csv("FEC_FL2012_Data.csv", row.names = NULL)
+correct_names <- names(data)[2:length(names(data))] #
+data <- select(data, -election_tp)#
+names(data) <- correct_names
+data$date <- as.Date(data$contb_receipt_dt, format = "%d-%b-%y")#
+nom_date <- as.Date("28-AUG-12", format = "%d-%b-%y")#
+elec_date <- as.Date("06-NOV-12", format = "%d-%b-%y")#
+data$days_from_elec <- as.integer(elec_date - data$date)#
+#
+data <- subset(data, cand_nm != "Stein, Jill" & cand_nm != "McCotter, Thaddeus G")#
+#
+data$party <- ifelse(data$cand_nm == "Obama, Barack", c("democrat"), c("republican")) #
+data$party[data$cand_nm %in% c("Johnson, Gary Earl", "Roemer, Charles E. 'Buddy' III")] <- "libertarian/other"#
+#
+library(zipcode) # https://cran.r-project.org/web/packages/zipcode/#
+data$zip <- clean.zipcodes(data$contbr_zip)#
+data$zip <- substr(data$zip, 1, 5)#
+#
+data <- subset(data, zip >= 30000 & zip < 40000)#
+data(zipcode)#
+data <- left_join(data, zipcode, by="zip")#
+data <- filter(data, state == "FL")#
+#
+data$retired <- ifelse(data$contbr_occupation == "RETIRED", "YES", "NO")#
+#
+data <- subset(data, contb_receipt_amt < 25000 & contb_receipt_amt > -25000)#
+data <- subset(data, contb_receipt_amt > 0)#
+#
+data$over200 <- ifelse(data$contb_receipt_amt > 200, "Large", "Small")#
+#
+for_real <- c("Cain, Herman", "Gingrich, Newt", "Obama, Barack", "Paul, Ron", "Romney, Mitt", "Santorum, Rick")
+names(data)
+setwd("/Users/frankCorrigan/Udacity/")
+list.files()
+setwd("Data-Analysis-with-R/")
+list.files()
+counties <- read.csv("florida_counties.csv")
+head(counties)
+don_data <- left_join(data, counties, by=zip)
+str(counties)
+counties$zip <- as.character(counties$zip)
+don_data <- left_join(data, counties, by=zip)
+str(data)
+str(counties)
+don_data <- left_join(data, counties, by="zip")
+head(don_data)
+don_data <- select(don_data, party, contb_receipt_amt, county)
+head(don_data)
+don_data_pct <- filter(don_data, party %in% c("democrat", "republican") %>%#
+  group_by(party, county) %>%#
+  summarize(n=n())
+don_data_pct <- filter(don_data, party %in% c("democrat", "republican")) %>%#
+  group_by(party, county) %>%#
+  summarize(n=n())
+don_data_pct <- filter(don_data, party %in% c("democrat", "republican")) %>%#
+  group_by(party, county) %>%#
+  summarize(n=n())
+head(don_data_pct)
+don_data_pct <- filter(don_data, party %in% c("democrat", "republican")) %>%#
+  group_by(county, party) %>%#
+  summarize(n=n())
+head(don_data_pct)
+don_data_pct <- filter(don_data_pct, county != "")
+head(don_data_pct)
+don_data_dem <- don_data_pct %>%#
+  group_by(county) %>%#
+  summarize(total = sum(n)) %>%#
+  mutate(party == "democrat" / total)
+don_data_totals <- filter(don_data, party %in% c("democrat", "republican")) %>%#
+  group_by(county) %>%#
+  summarize(n=n())
+don_data_totals
+don_data_total <- filter(don_data_total, county != "")
+don_data_total <- filter(don_data_totals, county != "")
+head(don_data_don_data_totals <- filter(don_data_totals, county != ""))
+don_data_totals <- filter(don_data_totals, county != "")
+head(don_data_pct)
+head(don_data_totals)
+don_data_dem <- filter(don_data_pct, party != "democrat")
+head(don_data_dem)
+don_data_dem <- filter(don_data_pct, party == "democrat")
+head(don_data_dem)
+don_data_pct <- filter(don_data, party %in% c("democrat", "republican")) %>%#
+  group_by(county, party) %>%#
+  summarize(sub_total=n()) #
+don_data_pct <- filter(don_data_pct, county != "")#
+don_data_dem <- filter(don_data_pct, party == "democrat")
+head(don_data_dem)
+don_data_totals <- filter(don_data, party %in% c("democrat", "republican")) %>%#
+  group_by(county) %>%#
+  summarize(total=n()) #
+don_data_totals <- filter(don_data_totals, county != "")
+dem <- left_join(don_data_totals, don_data_dem, by="county")
+head(dem)
+dem_last <- dem %>% mutate(prop = sub_total/total)
+head(dem_last)
+dem_last <- dem %>% mutate(prop = sub_total/total) %>%#
+  select(county, prop)
+head(dem_last)
+test <- "Alachua County"
+subset(test, -3)
