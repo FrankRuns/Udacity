@@ -21,6 +21,8 @@
 
 # EDA: Initial Exploratory Data Analysis
 
+data_dict = pickle.load(open("final_project_dataset.pkl", "r") )
+
 # What does a single entry look like?
 # How many features does each entry contain?
 data_dict.itervalues().next()
