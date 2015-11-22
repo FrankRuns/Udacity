@@ -28,8 +28,12 @@ from tester import dump_classifier_and_data
 #                  'from_ratio', 'short_gain', 'deferred_income', 'total_total', 'sal_ratio']
 # Random Forest, Accuracy: 0.87247	Precision: 0.59732	Recall: 0.13350	F1: 0.21
 
+# BEST YET.
+# features_list = ['poi', 'salary','shared_receipt_with_poi','deferred_income','bonusexpsal',
+#  'em_ratio','total_navalue_count','total_total', 'sal_navalue_count','fromto_ratio']
+
 features_list = ['poi', 'salary','shared_receipt_with_poi','deferred_income','bonusexpsal',
- 'em_ratio','total_navalue_count','total_total', 'sal_navalue_count','fromto_ratio']
+ 'em_ratio', 'total_navalue_count','total_total', 'sal_navalue_count', 'fromto_ratio']
 
 print('features: ', features_list)
 
@@ -174,17 +178,17 @@ from sklearn.tree import DecisionTreeClassifier
 #                                                   min_samples_split=20,
 #                                                   random_state=1))])
 
+# pipe_dtc = Pipeline([('scl', MinMaxScaler()),
+#                      ('pca', PCA(n_components=2, whiten=True)),
+#                      ('clf', DecisionTreeClassifier(criterion='gini',
+#                                                   min_samples_split=60,
+#                                                   random_state=42))])
+
 pipe_dtc = Pipeline([('scl', MinMaxScaler()),
                      ('pca', PCA(n_components=2)),
-                     ('clf', DecisionTreeClassifier(criterion='gini',
-                                                  min_samples_split=40,
-                                                  random_state=1))])
-# features_list = ['poi', 'salary','shared_receipt_with_poi','deferred_income','bonusexp',
-#  'nonsal_ratio','em_ratio','total_navalue_count','total_total','sal_navalue_count','fromto_ratio']
-# Accuracy: 0.89133   Precision: 0.59615  Recall: 0.57350
+                     ('clf', DecisionTreeClassifier(random_state=42))])
 
-clf = pipe_dtc.fit(features_train, labels_train)
-# clf = pipe_dtc.fit(features, labels)
+clf = pipe_dtc.fit(features, labels)
 
 print(clf)
 
