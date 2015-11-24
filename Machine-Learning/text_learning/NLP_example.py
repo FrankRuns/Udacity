@@ -2,9 +2,9 @@ from nltk.stem.snowball import SnowballStemmer
 import string
 
 ### read email, navigate cursor to beginning, and read all the text
-ff = open("../text_learning/test_email.txt", "r")
+ff = open("data_job_text", "r")
 ff.seek(0)
-all_text = f.read()
+all_text = ff.read()
 
 ### split off metadata (this may change depending upon email format)
 content = all_text.split("X-FileName:")
