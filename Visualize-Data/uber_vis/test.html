@@ -1,4 +1,3 @@
-<!-- html file for uber viz page -->
 <!DOCTYPE html>
 <meta charset="utf-8">
 <html>
@@ -25,18 +24,10 @@
 
       body {
         font: 10px sans-serif;
-        margin-left: 75px;
       }
-      
-      h1 {
-        font-size: 32px;
-      }
-      
-      p {
-        font-family: "Helvetica Neue", Helvetica, sans-serif;
-        font-size: 14px;
-        margin-right: 380px;
-        line-height: 1.5;
+
+      h2 {
+        margin-left: 125px;
       }
 
       .axis path,
@@ -61,30 +52,17 @@
         stroke:black;
         opacity:0.8;}
     </style>
+    <script src="http://d3js.org/d3.v3.js"></script>
+    <script src="d3.legend.js"></script>
   </head>
   <body>
-    <script src="d3.v3.min.js"></script>
-    <script src="d3.legend.js"></script>
-    <h1>Uber Surge Pricing</h1>
-    <p>Uber Technologies Inc. is an American multinational mobile ride hail company. Uber rates increase to ensure reliability when demand cannot be met by the number of drivers on the road.
-    We can access fair estimate and surge pricing data via the Uber API. Below is a one week chart (Jan 24, 2016 - Jan 31, 2016) showing, in 5 minute intervals,
-    the average surge rates divided into weekday and weekend buckets going from NYC's Penn Station to NYU in Greenwich Village. It clearly shows a increase
-    during the weekday morning commute and the weekend evenings. Despite those trends, surge pricing is surprisingly volatile.</p>
-    <h2>Avg. Uber Surge Rate in 5 Minute Increments Between NYC's Penn Station &amp; NYU (week of Jan 24, 2016)</h2>
     <div id="linechart"></div>
-    <p>A closer look into this data (shown below) reveals an unusual surge in the Monday morning and evening commute. I beleive this is
-    attributable to the <a href="http://www.nbcnewyork.com/news/local/NYC-2016-Blizzard-Record-Snowfall-Historic-Snowstorm-Shuts-Down-Transit-Travel-Ban-Plows-366340361.html">blizzard that hit NYC not 24 hours before</a> 
-    which led to a decrease in the number of available driver's Monday morning. Click on the 'Dataset data2.tsv'
-    button to 'normalize' the Monday morning and evening commute data which reveals a new, relatively steady surge price pattern during
-    evenings.</p>
-    <h2>Avg. Hourly Uber Surge Rate Heat Map (week of Jan 24, 2016)</h2>
     <div id="blockchart"></div>
     <div id="dataset-picker"></div>
-    
     <script>
       var margin_c1 = {top: 20, right: 80, bottom: 30, left: 50},
-          width_c1 = 864 - margin_c1.left - margin_c1.right,
-          height_c1 = 450 - margin_c1.top - margin_c1.bottom;
+          width_c1 = 960 - margin_c1.left - margin_c1.right,
+          height_c1 = 500 - margin_c1.top - margin_c1.bottom;
 
       var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S").parse;
 
@@ -296,11 +274,6 @@
           heatmapChart(d);
         });
     </script>
-  <p style="font-size:10px"><a href="http://www.frank-corrigan.com/">bi Frank Corrigan</a></p>
-  <a href="https://developer.uber.com/">Uber for Developers</a>
-  <a href="http://bl.ocks.org/mbostock/3884955">D3 Multi-Series Line Chart Example</a>
-  <a href="https://gist.github.com/ZJONSSON/3918369">D3 Legend Generator -- Ziggy Jonsson</a>
-  <a href="http://bl.ocks.org/tjdecke/5558084">D3 Tile Heatmap Example</a>
-  <a href="https://www.udacity.com/">Referencing <b>Udacity</b> because they help me build awesome stuff</a>
+
   </body>
 </html>
