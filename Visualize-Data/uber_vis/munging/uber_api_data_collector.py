@@ -33,7 +33,7 @@ start_time = times[bisect.bisect(times,datetime.datetime.now())]
 end_time = start_time + datetime.timedelta(days=7)
 
 # api call
-call = "https://api.uber.com/v1/estimates/price?start_latitude=40.7506&start_longitude=-73.9939&end_latitude=40.7300&end_longitude=-73.9950&server_token=wx-F5ajgvEtiSJxZoDCqw5gqu1s1hrUEdsIfLwTy"
+call = "https://api.uber.com/v1/estimates/price?start_latitude=40.7506&start_longitude=-73.9939&end_latitude=40.7300&end_longitude=-73.9950&server_token=TOKEN"
 
 # write request to text file every 5 minutes
 
