@@ -1,0 +1,56 @@
+rect.bordered {
+  stroke: #E6E6E6;
+  stroke-width:2px;   
+}
+
+text.mono {
+  font-size: 9pt;
+  font-family: Consolas, courier;
+  fill: #aaa;
+}
+
+text.axis-workweek {
+  fill: #000;
+}
+
+text.axis-worktime {
+  fill: #000;
+}
+
+body {
+  font: 10px sans-serif;
+  margin-left: 75px;
+}
+
+h1 {
+  font-size: 32px;
+}
+
+p {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 14px;
+  margin-right: 380px;
+  line-height: 1.5;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.legend rect {
+  fill:white;
+  stroke:black;
+  opacity:0.8;}

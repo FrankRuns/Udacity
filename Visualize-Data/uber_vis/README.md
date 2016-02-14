@@ -5,6 +5,8 @@ Summary
 -------
 Mobile ride hail company Uber ensures reliability of service when demand cannot be met by increasing prices instantly in the form of a surge ratio. Utilizing only a weeks worth of surge data, the following visualizations reveal simultaneous stability and volatiltiy in surge price behavior. The data was collected from the Uber API in 5 minute increments for a ride between New York City's Penn Station and New York University in Greenwich Village.
 
+[View d3.js Visualization](https://rawgit.com/FrankRuns/Udacity/master/Visualize-Data/uber_vis/index.html)
+
 Files
 -----
 * index.html -- base of viz code including d3.js scripts

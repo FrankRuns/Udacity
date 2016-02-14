@@ -3,304 +3,49 @@
 <meta charset="utf-8">
 <html>
   <head>
-    <style>
-      rect.bordered {
-        stroke: #E6E6E6;
-        stroke-width:2px;   
-      }
-
-      text.mono {
-        font-size: 9pt;
-        font-family: Consolas, courier;
-        fill: #aaa;
-      }
-
-      text.axis-workweek {
-        fill: #000;
-      }
-
-      text.axis-worktime {
-        fill: #000;
-      }
-
-      body {
-        font: 10px sans-serif;
-        margin-left: 75px;
-      }
-      
-      h1 {
-        font-size: 32px;
-      }
-      
-      p {
-        font-family: "Helvetica Neue", Helvetica, sans-serif;
-        font-size: 14px;
-        margin-right: 380px;
-        line-height: 1.5;
-      }
-
-      .axis path,
-      .axis line {
-        fill: none;
-        stroke: #000;
-        shape-rendering: crispEdges;
-      }
-
-      .x.axis path {
-        display: none;
-      }
-
-      .line {
-        fill: none;
-        stroke: steelblue;
-        stroke-width: 1.5px;
-      }
-
-      .legend rect {
-        fill:white;
-        stroke:black;
-        opacity:0.8;}
-    </style>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
   </head>
   <body>
-    <script src="d3.v3.min.js"></script>
-    <script src="d3.legend.js"></script>
+    <script src="libraries/d3.v3.min.js"></script>
+    <script src="libraries/d3.legend.js"></script>
+    
     <h1>Uber Surge Pricing</h1>
+    
     <p>Uber Technologies Inc. is an American multinational mobile ride hail company. Uber rates increase to ensure reliability when demand cannot be met by the number of drivers on the road.
     We can access fair estimate and surge pricing data via the Uber API. Below is a one week chart (Jan 24, 2016 - Jan 31, 2016) showing, in 5 minute intervals,
     the average surge rates divided into weekday and weekend buckets going from NYC's Penn Station to NYU in Greenwich Village. It clearly shows a increase
     during the weekday morning commute and the weekend evenings. Despite those trends, surge pricing is surprisingly volatile.</p>
+    
     <h2>Avg. Uber Surge Rate in 5 Minute Increments Between NYC's Penn Station &amp; NYU (week of Jan 24, 2016)</h2>
+    
     <div id="linechart"></div>
+    
     <p>A closer look into this data (shown below) reveals an unusual surge in the Monday morning and evening commute. I beleive this is
     attributable to the <a href="http://www.nbcnewyork.com/news/local/NYC-2016-Blizzard-Record-Snowfall-Historic-Snowstorm-Shuts-Down-Transit-Travel-Ban-Plows-366340361.html">blizzard that hit NYC not 24 hours before</a> 
     which led to a decrease in the number of available driver's Monday morning. Click on the 'Dataset data2.tsv'
     button to 'normalize' the Monday morning and evening commute data which reveals a new, relatively steady surge price pattern during
     evenings.</p>
-    <h2>Avg. Hourly Uber Surge Rate Heat Map (week of Jan 24, 2016)</h2>
-    <div id="blockchart"></div>
-    <div id="dataset-picker"></div>
     
-    <script>
-      var margin_c1 = {top: 20, right: 80, bottom: 30, left: 50},
-          width_c1 = 864 - margin_c1.left - margin_c1.right,
-          height_c1 = 450 - margin_c1.top - margin_c1.bottom;
+    <h2>Avg. Hourly Uber Surge Rate - Weekdays (week of Jan 24, 2016)</h2>
 
-      var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S").parse;
+    <div id="dataset-picker"></div>
+    <div id="weekdaytilechart"></div>
 
-      var x = d3.time.scale()
-          .range([0, width_c1]);
+    <p>A closer look into this data (shown below) reveals an unusual surge in the Monday morning and evening commute. I beleive this is </p>
+    <h2>Avg. Hourly Uber Surge Rate - Weekend (week of Jan 24, 2016)</h2>
+    
+    <div id="weekendtilechart"></div>
+    
+    <script src="js/multi.line.chart.js"></script>
+    <script src="js/weekday.tile.chart.js"></script>
+    <script src="js/weekend.tile.chart.js"></script>
 
-      var y = d3.scale.linear()
-          .range([height_c1, 0]);
-
-      var color = d3.scale.category10();
-
-      var xAxis = d3.svg.axis()
-          .scale(x)
-          .orient("bottom")
-          .tickFormat(d3.time.format("%I %p"));
-
-      var yAxis = d3.svg.axis()
-          .scale(y)
-          .orient("left");
-
-      var line = d3.svg.line()
-          .interpolate("step-after")
-          .x(function(d) { return x(d.date); })
-          .y(function(d) { return y(d.surge); });
-
-      var chart1 = d3.select("#linechart").append("svg")
-          .attr("width", width_c1 + margin_c1.left + margin_c1.right)
-          .attr("height", height_c1 + margin_c1.top + margin_c1.bottom)
-        .append("g")
-          .attr("transform", "translate(" + margin_c1.left + "," + margin_c1.top + ")");
-
-      d3.csv("multidata.csv", function(error, data) {
-
-        if (error) throw error;
-
-        color.domain(d3.keys(data[0]).filter(function(key) { return key !== "datetime"; }));
-
-        data.forEach(function(d) {
-          d.datetime = parseDate(d.datetime);
-        });
-
-        var cities = color.domain().map(function(name) {
-          return {
-            name: name,
-            values: data.map(function(d) {
-              return {date: d.datetime, surge: +d[name]};
-            })
-          };
-        });
-
-        x.domain(d3.extent(data, function(d) { return d.datetime; }));
-        
-        y.domain([
-          d3.min(cities, function(c) { return d3.min(c.values, function(v) { return v.surge; }); }),
-          d3.max(cities, function(c) { return d3.max(c.values, function(v) { return v.surge; }); })
-        ]);
-        
-        chart1.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height_c1 + ")")
-            .call(xAxis);
-
-        chart1.append("g")
-            .attr("class", "y axis")
-            .call(yAxis)
-          .append("text")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Surge Rate");
-
-        var city = chart1.selectAll(".city")
-            .data(cities)
-          .enter().append("g")
-            .attr("class", "city");
-        
-        city.append("path")
-            .attr("class", "line")
-            .attr("d", function(d) { return line(d.values); })
-            .attr("data-legend",function(d) { return d.name})
-            .style("stroke", function(d) { return color(d.name); });
-        
-        city.append("text")
-            .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
-            .attr("transform", function(d) { return "translate(" + x(d.value.date) + "," + y(d.value.surge) + ")"; })
-            .attr("x", 3)
-            .attr("dy", ".35em")
-            .text(function(d) { return d.name; });
-
-        legend = chart1.append("g")
-          .attr("class","legend")
-          .attr("transform","translate(50,30)")
-          .style("font-size","12px")
-          .call(d3.legend)
-
-      });
-    </script>
-
-    <script type="text/javascript">
-      var margin_c2 = { top: 50, right: 0, bottom: 100, left: 30 },
-          width_c2 = 960 - margin_c2.left - margin_c2.right,
-          height_c2 = 430 - margin_c2.top - margin_c2.bottom,
-          gridSize = Math.floor(width_c2 / 24),
-          legendElementWidth = gridSize*2,
-          buckets = 9,
-          colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
-          days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
-          times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12a", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12p"];
-          datasets = ["data.tsv", "data2.tsv"];
-
-      var chart2 = d3.select("#blockchart").append("svg")
-          .attr("width", width_c2 + margin_c2.left + margin_c2.right)
-          .attr("height", height_c2 + margin_c2.top + margin_c2.bottom)
-          .append("g")
-          .attr("transform", "translate(" + margin_c2.left + "," + margin_c2.top + ")");
-
-      var dayLabels = chart2.selectAll(".dayLabel")
-          .data(days)
-          .enter().append("text")
-            .text(function (d) { return d; })
-            .attr("x", 0)
-            .attr("y", function (d, i) { return i * gridSize; })
-            .style("text-anchor", "end")
-            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
-            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
-
-      var timeLabels = chart2.selectAll(".timeLabel")
-          .data(times)
-          .enter().append("text")
-            .text(function(d) { return d; })
-            .attr("x", function(d, i) { return i * gridSize; })
-            .attr("y", 0)
-            .style("text-anchor", "middle")
-            .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
-
-      var heatmapChart = function(tsvFile) {
-        d3.tsv(tsvFile,
-        function(d) {
-          return {
-            day: +d.day,
-            hour: +d.hour,
-            value: +d.value
-          };
-        },
-        function(error, data) {
-          var colorScale = d3.scale.quantile()
-              .domain([1, d3.max(data, function (d) { return d.value; })])
-              .range(colors);
-          
-          var cards = chart2.selectAll(".hour")
-              .data(data, function(d) {return d.day+':'+d.hour;});
-
-          cards.append("title");
-
-          cards.enter().append("rect")
-              .attr("x", function(d) { return (d.hour - 1) * gridSize; })
-              .attr("y", function(d) { return (d.day - 1) * gridSize; })
-              .attr("rx", 4)
-              .attr("ry", 4)
-              .attr("class", "hour bordered")
-              .attr("width", gridSize)
-              .attr("height", gridSize)
-              .style("fill", colors[0]);
-
-          cards.transition().duration(1000)
-              .style("fill", function(d) { return colorScale(d.value); });
-
-          cards.select("title").text(function(d) { return d.value; });
-          
-          cards.exit().remove();
-
-          var legend = chart2.selectAll(".legend")
-              .data([1].concat(colorScale.quantiles()), function(d) { return d; });
-
-          legend.enter().append("g")
-              .attr("class", "legend");
-
-          legend.append("rect")
-            .attr("x", function(d, i) { return legendElementWidth * i; })
-            .attr("y", height_c2)
-            .attr("width", legendElementWidth)
-            .attr("height", gridSize / 2)
-            .style("fill", function(d, i) { return colors[i]; });
-          
-          legend.append("text")
-            .attr("class", "mono")
-            .text(function(d) { return "≥ " + +d.toFixed(2); })
-            .attr("x", function(d, i) { return legendElementWidth * i; })
-            .attr("y", height_c2 + gridSize);
-
-          legend.exit().remove();
-
-        });  
-      };
-
-      heatmapChart(datasets[0]);
-      
-      var datasetpicker = d3.select("#dataset-picker").selectAll(".dataset-button")
-        .data(datasets);
-
-      datasetpicker.enter()
-        .append("input")
-        .attr("value", function(d){ return "Dataset " + d })
-        .attr("type", "button")
-        .attr("class", "dataset-button")
-        .on("click", function(d) {
-          heatmapChart(d);
-        });
-    </script>
-  <p style="font-size:10px"><a href="http://www.frank-corrigan.com/">bi Frank Corrigan</a></p>
-  <a href="https://developer.uber.com/">Uber for Developers</a>
-  <a href="http://bl.ocks.org/mbostock/3884955">D3 Multi-Series Line Chart Example</a>
-  <a href="https://gist.github.com/ZJONSSON/3918369">D3 Legend Generator -- Ziggy Jonsson</a>
-  <a href="http://bl.ocks.org/tjdecke/5558084">D3 Tile Heatmap Example</a>
-  <a href="https://www.udacity.com/">Referencing <b>Udacity</b> because they help me build awesome stuff</a>
+    <p style="font-size:10px"><a href="http://www.frank-corrigan.com/">bi Frank Corrigan</a></p>
+    
+    <a href="https://developer.uber.com/">Uber for Developers</a>
+    <a href="http://bl.ocks.org/mbostock/3884955">D3 Multi-Series Line Chart Example</a>
+    <a href="https://gist.github.com/ZJONSSON/3918369">D3 Legend Generator -- Ziggy Jonsson</a>
+    <a href="http://bl.ocks.org/tjdecke/5558084">D3 Tile Heatmap Example</a>
+    <a href="https://www.udacity.com/">Referencing <b>Udacity</b> because they help me build awesome stuff</a>
   </body>
 </html>
