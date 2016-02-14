@@ -6,6 +6,7 @@
     <link rel="stylesheet" type="text/css" href="css/style.css">
   </head>
   <body>
+
     <script src="libraries/d3.v3.min.js"></script>
     <script src="libraries/d3.legend.js"></script>
     
@@ -17,35 +18,35 @@
     during the weekday morning commute and the weekend evenings. Despite those trends, surge pricing is surprisingly volatile.</p>
     
     <h2>Avg. Uber Surge Rate in 5 Minute Increments Between NYC's Penn Station &amp; NYU (week of Jan 24, 2016)</h2>
-    
     <div id="linechart"></div>
     
-    <p>A closer look into this data (shown below) reveals an unusual surge in the Monday morning and evening commute. I beleive this is
+    <p>A closer look into this data (shown below) reveals an unusual surge in the Monday (and to a lesser extent Tuesday) morning and evening commute. I beleive this is
     attributable to the <a href="http://www.nbcnewyork.com/news/local/NYC-2016-Blizzard-Record-Snowfall-Historic-Snowstorm-Shuts-Down-Transit-Travel-Ban-Plows-366340361.html">blizzard that hit NYC not 24 hours before</a> 
-    which led to a decrease in the number of available driver's Monday morning. Click on the 'Dataset data2.tsv'
+    which led to a decrease in the number of available driver's Monday morning. The below tile heat map breaks out surge rates by hour across each day of the week. Darker shades correspond to higher surge rates. Click on the 'data/wkday2.tsv'
     button to 'normalize' the Monday morning and evening commute data which reveals a new, relatively steady surge price pattern during
     evenings.</p>
     
     <h2>Avg. Hourly Uber Surge Rate - Weekdays (week of Jan 24, 2016)</h2>
-
     <div id="dataset-picker"></div>
     <div id="weekdaytilechart"></div>
 
-    <p>A closer look into this data (shown below) reveals an unusual surge in the Monday morning and evening commute. I beleive this is </p>
+    <p>For good measure, we also look at the weekend hours. Similarly to week days, the hours between 6 and 8PM see the highest surge pricing of the day.</p>
+
     <h2>Avg. Hourly Uber Surge Rate - Weekend (week of Jan 24, 2016)</h2>
-    
     <div id="weekendtilechart"></div>
     
+    <p>It's important to remember that this is only one week of data between two points in New York City. Collecting and plotting months or perhaps even years of data between many different locations might tell a different story. The goal of this particular investigation was to analyze surge rate bahavior and has shown that surge pricing, while displaying some patterns, is definitely not stable.</p>
+
     <script src="js/multi.line.chart.js"></script>
     <script src="js/weekday.tile.chart.js"></script>
     <script src="js/weekend.tile.chart.js"></script>
 
     <p style="font-size:10px"><a href="http://www.frank-corrigan.com/">bi Frank Corrigan</a></p>
-    
     <a href="https://developer.uber.com/">Uber for Developers</a>
     <a href="http://bl.ocks.org/mbostock/3884955">D3 Multi-Series Line Chart Example</a>
     <a href="https://gist.github.com/ZJONSSON/3918369">D3 Legend Generator -- Ziggy Jonsson</a>
     <a href="http://bl.ocks.org/tjdecke/5558084">D3 Tile Heatmap Example</a>
     <a href="https://www.udacity.com/">Referencing <b>Udacity</b> because they help me build awesome stuff</a>
+
   </body>
 </html>

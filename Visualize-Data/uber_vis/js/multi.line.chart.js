@@ -1,6 +1,8 @@
 var margin_c1 = {top: 20, right: 80, bottom: 30, left: 50},
-    width_c1 = 864 - margin_c1.left - margin_c1.right,
-    height_c1 = 450 - margin_c1.top - margin_c1.bottom;
+    // width_c1 = 864 - margin_c1.left - margin_c1.right,
+    // height_c1 = 450 - margin_c1.top - margin_c1.bottom;
+    width_c1 = 950 - margin_c1.left - margin_c1.right,
+    height_c1 = 360 - margin_c1.top - margin_c1.bottom;
 
 var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S").parse;
 

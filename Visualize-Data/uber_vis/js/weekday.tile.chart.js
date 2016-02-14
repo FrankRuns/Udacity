@@ -1,6 +1,6 @@
-var margin_c2 = { top: 50, right: 0, bottom: 160, left: 30 },
+var margin_c2 = { top: 50, right: 0, bottom: 45, left: 30 },
     width_c2 = 960 - margin_c2.left - margin_c2.right,
-    height_c2 = 430 - margin_c2.top - margin_c2.bottom,
+    height_c2 = 315 - margin_c2.top - margin_c2.bottom,
     gridSize_c2 = Math.floor(width_c2 / 24),
     legendElementWidth_c2 = gridSize_c2*2,
     buckets_c2 = 9,
@@ -102,7 +102,7 @@ var datasetpicker = d3.select("#dataset-picker").selectAll(".dataset-button")
 
 datasetpicker.enter()
   .append("input")
-  .attr("value", function(d){ return "Dataset " + d })
+  .attr("value", function(d){ return d })
   .attr("type", "button")
   .attr("class", "dataset-button")
   .on("click", function(d) {

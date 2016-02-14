@@ -1,6 +1,6 @@
-var margin_c3 = { top: 50, right: 0, bottom: 275, left: 30 },
+var margin_c3 = { top: 50, right: 0, bottom: 45, left: 30 },
     width_c3 = 960 - margin_c3.left - margin_c3.right,
-    height_c3 = 430 - margin_c3.top - margin_c3.bottom,
+    height_c3 = 200 - margin_c3.top - margin_c3.bottom,
     gridSize_c3 = Math.floor(width_c3 / 24),
     legendElementWidth_c3 = gridSize_c3*2,
     buckets_c3 = 9,
