@@ -12,10 +12,11 @@
     
     <h1>Uber Surge Pricing</h1>
     
-    <p>Uber Technologies Inc. is an American multinational mobile ride hail company. Uber rates increase to ensure reliability when demand cannot be met by the number of drivers on the road.
-    We can access fair estimate and surge pricing data via the Uber API. Below is a one week chart (Jan 24, 2016 - Jan 31, 2016) showing, in 5 minute intervals,
-    the average surge rates divided into weekday and weekend buckets going from NYC's Penn Station to NYU in Greenwich Village. It clearly shows a increase
-    during the weekday morning commute and the weekend evenings. Despite those trends, surge pricing is surprisingly volatile.</p>
+    <p>Uber Technologies Inc. is an American multinational mobile ride hail company. Unlike traditional taxi service, prices are determined dynamically based on supply of drivers and demand for those drivers in a geographic area. When demand > supply, prices rise to incentivize drivers to hit the road to ensure quick pickups for customers. This increase in price is called surge pricing and is based on ratios. During surge periods, base prices for a ride (based on distance &amp; time) are multiplied by some surge ratio which could be anywhere above 1.0. For example, if base price for a ride is $20 and the surge rate at the time is 1.25 the total price of the fare will be $20 x 1.25 = $25.  
+
+    </br></br>
+
+    We can access fair estimate and surge pricing data via the Uber API. Below is a one week chart (Jan 24, 2016 - Jan 31, 2016) showing, in 5 minute intervals, the average surge rates divided into weekday and weekend buckets going from NYC's Penn Station to NYU in Greenwich Village. It clearly shows a increase during the weekday morning commute and the weekend evenings. Despite those trends, surge pricing is surprisingly volatile.</p>
     
     <h2>Avg. Uber Surge Rate in 5 Minute Increments Between NYC's Penn Station &amp; NYU (week of Jan 24, 2016)</h2>
     <div id="linechart"></div>

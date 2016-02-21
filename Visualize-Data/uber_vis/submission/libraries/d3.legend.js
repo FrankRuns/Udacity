@@ -1,5 +1,6 @@
 // thank you Ziggy Jonson: http://bl.ocks.org/ZJONSSON
 // http://bl.ocks.org/ZJONSSON/3918369
+// this is used for producing box legend in multiline chart
 
 (function() {
 d3.legend = function(g) {
