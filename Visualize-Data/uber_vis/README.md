@@ -26,7 +26,7 @@ Design
 ------
 My co-workers were convinced that surge price behavior was concise and stable meaning once surge pricing is in effect, it stays at that level for a predetermined period. I wasn't convinced -- I wanted data. When I originally envisioned this on my whiteboard @ home, I knew I wanted to plot a step chart by day of the week over a 24-hour period to show me differences in surge price behavior by day. I drew it several times, then I went to r for some quick iterations (one of those pasted directly below). At this point, I collected feedback from my wife (Feedback #1).
 
-![first iteration][submission/img/surgeByDate.png]
+![first iteration](/submission/img/surgeByDate.png?raw=True)
 
 After writing a script to collect the data from the Uber API, doing the data cleaning in r, and creating the plot I mention above, it came out a bit chaotic with little message.
 
