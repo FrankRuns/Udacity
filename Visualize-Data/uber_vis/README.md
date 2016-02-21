@@ -1,4 +1,3 @@
-ls
 Uber Surge Pricing Behavior Visualization
 =========================================
 
