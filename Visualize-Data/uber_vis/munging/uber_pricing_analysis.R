@@ -1,4 +1,4 @@
-setwd("/Users/frankcorrigan/Repositories/Udacity/Visualize-Data/uber_vis/data")
+setwd("/Users/frankcorrigan/Repositories/Udacity/Visualize-Data/uber_vis/rawdata")
 library(ggplot2)
 library(dplyr)
 # library(reshape2) -- not sure i need
