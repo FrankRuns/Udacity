@@ -1,3 +1,4 @@
+ls
 Uber Surge Pricing Behavior Visualization
 =========================================
 
@@ -9,7 +10,7 @@ The first graphic shows us 2 things. First, surge pricing is volatile -- changin
 
 The later graphics break out surge rates by day and hour showing that this particular Monday had a very high sruge rate compared to other days of the week -- I attribute this to the weekend blizzard that happened the day before. 
 
-[View d3.js Visualization](https://rawgit.com/FrankRuns/Udacity/master/Visualize-Data/uber_vis/index.html)
+[View d3.js Visualization](https://rawgit.com/FrankRuns/Udacity/master/Visualize-Data/uber_vis/submission/index.html)
 
 Files
 -----
